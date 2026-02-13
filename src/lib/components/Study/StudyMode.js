@@ -1,14 +1,22 @@
 /**
  * StudyMode — fullscreen flashcard study with audio playback.
  *
- * Audio fix: the <audio> element is created once in the DOM at mount time,
- * not gated behind a conditional template block. The src is set imperatively,
- * eliminating the Svelte timing bug where bind:this was undefined during
- * reactive chain execution.
+ * Safari fixes applied here:
+ * 1. All image blobs are eagerly converted to data URLs at mount time
+ *    (blobToDataURL / FileReader). This avoids Safari's IndexedDB blob
+ *    lifetime issue where createObjectURL fails on blobs fetched in a
+ *    previous or closed transaction.
+ * 2. Audio uses blob URLs (required for <audio> src), created eagerly
+ *    before the IndexedDB transaction closes.
+ * 3. Navigation is rate-limited to one action per 300 ms to prevent
+ *    iOS Safari's phantom touch bug: when el.innerHTML is replaced inside
+ *    a touchend handler, Safari can fire synthetic touchend events on the
+ *    newly created elements, causing infinite back-and-forth flipping.
  */
 
 import { cards } from '../../stores/cards.js';
 import { resetViewport } from '../../utils/viewportReset.js';
+import { blobToDataURL } from '../../utils/imageCompression.js';
 import { debugLog } from '../../utils/debugLog.js';
 
 export function createStudyMode(container, { collectionId, collectionName, onExit }) {
@@ -23,9 +31,19 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
   let viewedCards = new Set();
   let isPlaying = false;
   let audioUnsupported = false;
+  let destroyed = false;
 
-  // Blob URL cache
-  const urlCache = new Map();
+  // URL cache — populated eagerly during preload before first render
+  const urlCache = new Map(); // cardId → { imageUrl: string|null, audioUrl: string|null }
+
+  // Navigation rate-limit — prevents iOS phantom touch loop
+  let lastNavMs = 0;
+  function canNavigate() {
+    const now = Date.now();
+    if (now - lastNavMs < 300) return false;
+    lastNavMs = now;
+    return true;
+  }
 
   // Stable audio element — created once, never destroyed until unmount
   const audio = document.createElement('audio');
@@ -33,47 +51,63 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
   audio.addEventListener('pause',   () => { isPlaying = false; updateAudioBtn(); debugLog.add('[AUDIO] pause'); });
   audio.addEventListener('ended',   () => { isPlaying = false; updateAudioBtn(); debugLog.add('[AUDIO] ended'); });
   audio.addEventListener('error',   () => {
-    debugLog.add(`[AUDIO] error code=${audio.error?.code} msg=${audio.error?.message ?? '—'} src=${audio.src}`);
+    debugLog.add(`[AUDIO] error code=${audio.error?.code} msg=${audio.error?.message ?? '—'} src=${audio.src.slice(0, 60)}`);
     if (audio.error?.code === 4) { audioUnsupported = true; updateAudioBtn(); }
   });
-  audio.addEventListener('stalled', () => { debugLog.add(`[AUDIO] stalled src=${audio.src}`); });
-  audio.addEventListener('waiting', () => { debugLog.add(`[AUDIO] waiting src=${audio.src}`); });
+  audio.addEventListener('stalled', () => { debugLog.add(`[AUDIO] stalled`); });
+  audio.addEventListener('waiting', () => { debugLog.add(`[AUDIO] waiting`); });
   audio.addEventListener('canplay', () => { debugLog.add('[AUDIO] canplay'); });
-
-  // Touch state
-  let touchStartX = 0;
 
   if (studyCards.length === 0) {
     onExit();
     return { destroy: () => el.remove() };
   }
 
-  function currentCard() { return studyCards[currentIndex]; }
+  // Show a brief loading state while we preload URLs
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:center;height:100%;color:white">
+      <svg class="spinner" style="width:2.5rem;height:2.5rem" fill="none" viewBox="0 0 24 24">
+        <circle style="opacity:0.25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+        <path style="opacity:0.75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+      </svg>
+    </div>
+  `;
 
-  function ensureUrls(card) {
-    if (!card) return { imageUrl: null, audioUrl: null };
-    if (!urlCache.has(card.id)) {
+  // Eagerly convert all blobs to URLs before first render.
+  // Images → data URLs (immune to Safari blob lifetime issues).
+  // Audio  → blob URLs (required for <audio src>); created now while
+  //          the IndexedDB transaction is still hot.
+  async function preloadUrls() {
+    for (const card of studyCards) {
+      if (destroyed) return;
       let imageUrl = null;
       let audioUrl = null;
-      try {
-        if (card.imageBlob instanceof Blob && card.imageBlob.size > 0) {
-          imageUrl = URL.createObjectURL(card.imageBlob);
-          debugLog.add(`[IMG] created URL for card ${card.id} (${card.imageBlob.size}B ${card.imageBlob.type})`);
-        } else {
-          debugLog.add(`[IMG] no imageBlob for card ${card.id} (blob=${card.imageBlob}, type=${card.imageBlob?.constructor?.name})`);
+
+      if (card.imageBlob instanceof Blob && card.imageBlob.size > 0) {
+        try {
+          imageUrl = await blobToDataURL(card.imageBlob);
+          debugLog.add(`[IMG] preloaded data URL for card ${card.id} (${card.imageBlob.size}B ${card.imageBlob.type})`);
+        } catch (e) {
+          debugLog.add(`[IMG] preload failed for card ${card.id}: ${e}`);
         }
-      } catch (e) { console.warn('Failed to create image URL', e); debugLog.add(`[IMG] createObjectURL failed: ${e}`); }
-      try {
-        if (card.audioBlob instanceof Blob && card.audioBlob.size > 0) {
+      }
+
+      if (card.audioBlob instanceof Blob && card.audioBlob.size > 0) {
+        try {
           audioUrl = URL.createObjectURL(card.audioBlob);
           debugLog.add(`[AUDIO] created URL for card ${card.id} (${card.audioBlob.size}B ${card.audioBlob.type})`);
-        } else {
-          debugLog.add(`[AUDIO] no audioBlob for card ${card.id} (blob=${card.audioBlob}, type=${card.audioBlob?.constructor?.name})`);
+        } catch (e) {
+          debugLog.add(`[AUDIO] createObjectURL failed for card ${card.id}: ${e}`);
         }
-      } catch (e) { console.warn('Failed to create audio URL', e); debugLog.add(`[AUDIO] createObjectURL failed: ${e}`); }
+      }
+
       urlCache.set(card.id, { imageUrl, audioUrl });
     }
-    return urlCache.get(card.id);
+  }
+
+  function getUrls(card) {
+    if (!card) return { imageUrl: null, audioUrl: null };
+    return urlCache.get(card.id) ?? { imageUrl: null, audioUrl: null };
   }
 
   function loadAudio(url) {
@@ -81,7 +115,7 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
     isPlaying = false;
     audioUnsupported = false;
     if (url) {
-      debugLog.add(`[AUDIO] loadAudio src=${url}`);
+      debugLog.add(`[AUDIO] loadAudio src=${url.slice(0, 60)}`);
       audio.src = url;
       audio.load();
     } else {
@@ -90,9 +124,9 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
   }
 
   function playAudio() {
-    const { audioUrl } = ensureUrls(currentCard());
-    if (!audio || !audioUrl) { debugLog.add('[AUDIO] playAudio: no audio or no URL'); return; }
-    debugLog.add(`[AUDIO] playAudio called src=${audio.src} readyState=${audio.readyState}`);
+    const { audioUrl } = getUrls(currentCard());
+    if (!audioUrl) { debugLog.add('[AUDIO] playAudio: no URL'); return; }
+    debugLog.add(`[AUDIO] playAudio called readyState=${audio.readyState}`);
     audio.currentTime = 0;
     audio.play().catch(e => { debugLog.add(`[AUDIO] play() rejected: ${e}`); });
   }
@@ -103,6 +137,8 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
     cards.markAsReviewed(card.id);
   }
 
+  function currentCard() { return studyCards[currentIndex]; }
+
   function getCardSides(text) {
     const lines = text.split('\n').filter(l => l.trim());
     if (lines.length <= 1) return { front: text, back: null };
@@ -111,8 +147,9 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
   }
 
   function render() {
+    if (destroyed) return;
     const card = currentCard();
-    const { imageUrl, audioUrl } = ensureUrls(card);
+    const { imageUrl, audioUrl } = getUrls(card);
     const sides = card ? getCardSides(card.text) : { front: '', back: null };
     const hasMultipleLines = card && card.text.split('\n').filter(l => l.trim()).length > 1;
     const progress = `${currentIndex + 1} / ${studyCards.length}`;
@@ -204,8 +241,8 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
     // Log image load/error
     const imgEl = el.querySelector('.study-card__image');
     if (imgEl) {
-      imgEl.addEventListener('load',  () => debugLog.add(`[IMG] loaded in StudyMode src=${imgEl.src}`));
-      imgEl.addEventListener('error', () => debugLog.add(`[IMG] error in StudyMode src=${imgEl.src}`));
+      imgEl.addEventListener('load',  () => debugLog.add(`[IMG] loaded in StudyMode`));
+      imgEl.addEventListener('error', () => debugLog.add(`[IMG] error in StudyMode src=${imgEl.src.slice(0, 60)}`));
     }
 
     bindEvents();
@@ -244,25 +281,32 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
     });
     el.querySelector('[data-action="play-audio"]')?.addEventListener('click', (e) => {
       e.stopPropagation();
-      playAudio();
+      if (!audioUnsupported) playAudio();
     });
 
-    // Touch swipe
+    // Touch swipe — uses canNavigate() to prevent the iOS phantom-touch loop
     const touchArea = el.querySelector('[data-toucharea]');
     if (touchArea) {
       touchArea.addEventListener('touchstart', (e) => {
         touchStartX = e.changedTouches[0].clientX;
-      });
+      }, { passive: true });
       touchArea.addEventListener('touchend', (e) => {
         e.preventDefault();
         const delta = e.changedTouches[0].clientX - touchStartX;
         const THRESHOLD = 50;
-        if (delta > THRESHOLD) goToPrevious();
-        else if (delta < -THRESHOLD) goToNext();
-        else toggleFlip();
+        if (Math.abs(delta) > THRESHOLD) {
+          if (!canNavigate()) return;
+          if (delta > 0) goToPrevious();
+          else goToNext();
+        } else {
+          toggleFlip();
+        }
       });
     }
   }
+
+  // Touch state
+  let touchStartX = 0;
 
   function toggleFlip() {
     showFront = !showFront;
@@ -287,8 +331,8 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
 
   function handleKeydown(e) {
     switch (e.key) {
-      case 'ArrowLeft':  e.preventDefault(); goToPrevious(); break;
-      case 'ArrowRight': e.preventDefault(); goToNext(); break;
+      case 'ArrowLeft':  e.preventDefault(); if (canNavigate()) goToPrevious(); break;
+      case 'ArrowRight': e.preventDefault(); if (canNavigate()) goToNext(); break;
       case ' ':
       case 'Enter':      e.preventDefault(); toggleFlip(); break;
       case 'Escape':     e.preventDefault(); onExit(); break;
@@ -297,15 +341,17 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
 
   window.addEventListener('keydown', handleKeydown);
 
-  render();
+  // Preload all URLs then render
+  preloadUrls().then(() => { if (!destroyed) render(); });
 
   return {
     destroy() {
+      destroyed = true;
       window.removeEventListener('keydown', handleKeydown);
       audio.pause();
       audio.removeAttribute('src');
-      for (const [cardId, { imageUrl, audioUrl }] of urlCache.entries()) {
-        if (imageUrl) { URL.revokeObjectURL(imageUrl); debugLog.add(`[IMG] revoked URL for card ${cardId}`); }
+      // Revoke blob URLs (audio only — image data URLs need no revocation)
+      for (const [cardId, { audioUrl }] of urlCache.entries()) {
         if (audioUrl) { URL.revokeObjectURL(audioUrl); debugLog.add(`[AUDIO] revoked URL for card ${cardId}`); }
       }
       urlCache.clear();

@@ -4,6 +4,7 @@
 
 import { formatRelativeTime, truncateText } from '../../utils/helpers.js';
 import { blobToDataURL } from '../../utils/imageCompression.js';
+import { db } from '../../database/db.js';
 import { debugLog } from '../../utils/debugLog.js';
 
 export function createCardListItem(container, { card, onEdit, onDelete }) {
@@ -29,9 +30,24 @@ export function createCardListItem(container, { card, onEdit, onDelete }) {
       thumbnailBlobRef = card.imageBlob;
       debugLog.add(`[IMG] created data URL thumbnail for card ${card.id} (${card.imageBlob.size}B ${card.imageBlob.type})`);
     } catch (e) {
-      thumbnailUrl = null;
-      thumbnailBlobRef = null;
-      debugLog.add(`[IMG] blobToDataURL failed for card ${card.id}: ${e}`);
+      // Safari blob expired — re-fetch fresh from IndexedDB
+      debugLog.add(`[IMG] blobToDataURL failed, re-fetching from DB: ${e}`);
+      try {
+        const fresh = await db.cards.get(card.id);
+        if (fresh?.imageBlob instanceof Blob && fresh.imageBlob.size > 0) {
+          thumbnailUrl = await blobToDataURL(fresh.imageBlob);
+          card = { ...card, imageBlob: fresh.imageBlob };
+          thumbnailBlobRef = card.imageBlob;
+          debugLog.add(`[IMG] re-fetched data URL thumbnail for card ${card.id}`);
+        } else {
+          thumbnailUrl = null;
+          thumbnailBlobRef = null;
+        }
+      } catch (e2) {
+        thumbnailUrl = null;
+        thumbnailBlobRef = null;
+        debugLog.add(`[IMG] re-fetch also failed for card ${card.id}: ${e2}`);
+      }
     }
   }
 
