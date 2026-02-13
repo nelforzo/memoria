@@ -10,8 +10,21 @@
   let studyCards = [];
   let viewedCards = new Set();
   let showFront = true;
+  let currentImageUrl = null;
+  let currentAudioUrl = null;
 
   $: currentCard = studyCards[currentIndex];
+
+  function revokeCurrentUrls() {
+    if (currentImageUrl) { URL.revokeObjectURL(currentImageUrl); currentImageUrl = null; }
+    if (currentAudioUrl) { URL.revokeObjectURL(currentAudioUrl); currentAudioUrl = null; }
+  }
+
+  $: {
+    revokeCurrentUrls();
+    currentImageUrl = currentCard?.imageBlob ? URL.createObjectURL(currentCard.imageBlob) : null;
+    currentAudioUrl = currentCard?.audioBlob ? URL.createObjectURL(currentCard.audioBlob) : null;
+  }
   $: progress = studyCards.length > 0 ? `${currentIndex + 1} / ${studyCards.length}` : '0 / 0';
   $: canGoPrevious = currentIndex > 0;
   $: canGoNext = currentIndex < studyCards.length - 1;
@@ -32,7 +45,7 @@
   });
 
   onDestroy(() => {
-    // Clean up if needed
+    revokeCurrentUrls();
   });
 
   function markCurrentCardAsViewed() {
@@ -106,6 +119,21 @@
   }
 
   $: cardSides = currentCard ? getCardSides(currentCard.text) : { front: '', back: null };
+
+  // Swipe gesture support
+  let touchStartX = 0;
+
+  function handleTouchStart(event) {
+    touchStartX = event.changedTouches[0].clientX;
+  }
+
+  function handleTouchEnd(event) {
+    const delta = event.changedTouches[0].clientX - touchStartX;
+    const SWIPE_THRESHOLD = 50;
+    if (delta > SWIPE_THRESHOLD) goToPrevious();
+    else if (delta < -SWIPE_THRESHOLD) goToNext();
+    else toggleFlip();
+  }
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
@@ -146,34 +174,37 @@
     <div class="max-w-4xl w-full">
       {#if currentCard}
         <!-- Card Container -->
+        {#key currentCard.id}
         <div class="relative">
           <!-- Card -->
           <div
-            class="bg-white rounded-2xl shadow-2xl p-12 min-h-[400px] flex flex-col items-center justify-center cursor-pointer transition-transform hover:scale-[1.02]"
+            class="bg-white rounded-2xl shadow-2xl p-6 sm:p-12 min-h-[200px] sm:min-h-[400px] flex flex-col items-center justify-center cursor-pointer active:scale-[0.98] transition-transform touch-pan-y"
             on:click={toggleFlip}
+            on:touchstart={handleTouchStart}
+            on:touchend={handleTouchEnd}
             role="button"
             tabindex="0"
             on:keydown={(e) => (e.key === 'Enter' || e.key === ' ') && toggleFlip()}
           >
             <!-- Image Display (if present) -->
-            {#if currentCard.imageBlob}
+            {#if currentImageUrl}
               <div class="mb-6">
                 <img
-                  src={URL.createObjectURL(currentCard.imageBlob)}
-                  alt="Card image"
+                  src={currentImageUrl}
+                  alt=""
                   class="max-w-full max-h-64 mx-auto rounded-lg shadow-lg object-contain"
                 />
               </div>
             {/if}
 
             <!-- Audio Display (if present) -->
-            {#if currentCard.audioBlob}
+            {#if currentAudioUrl}
               <div class="mb-6 w-full max-w-md mx-auto" on:click|stopPropagation role="none">
                 <audio
                   controls
-                  src={URL.createObjectURL(currentCard.audioBlob)}
+                  src={currentAudioUrl}
                   class="w-full"
-                />
+                ></audio>
               </div>
             {/if}
 
@@ -182,7 +213,7 @@
               <div class="text-center w-full">
                 {#if showFront}
                   <div class="text-gray-500 text-sm mb-4 uppercase tracking-wide">Question</div>
-                  <p class="text-3xl text-gray-900 whitespace-pre-wrap leading-relaxed">
+                  <p class="text-xl sm:text-3xl text-gray-900 whitespace-pre-wrap leading-relaxed">
                     {cardSides.front}
                   </p>
                   <div class="mt-8 text-indigo-600 text-sm">
@@ -193,7 +224,7 @@
                   </div>
                 {:else}
                   <div class="text-gray-500 text-sm mb-4 uppercase tracking-wide">Answer</div>
-                  <p class="text-3xl text-gray-900 whitespace-pre-wrap leading-relaxed">
+                  <p class="text-xl sm:text-3xl text-gray-900 whitespace-pre-wrap leading-relaxed">
                     {cardSides.back}
                   </p>
                   <div class="mt-8 text-green-600 text-sm">
@@ -207,7 +238,7 @@
             {:else}
               <!-- Single block of text -->
               <div class="text-center w-full">
-                <p class="text-3xl text-gray-900 whitespace-pre-wrap leading-relaxed">
+                <p class="text-xl sm:text-3xl text-gray-900 whitespace-pre-wrap leading-relaxed">
                   {currentCard.text}
                 </p>
               </div>
@@ -219,6 +250,7 @@
             Card {currentIndex + 1}
           </div>
         </div>
+        {/key}
       {:else}
         <div class="text-center text-white">
           <p class="text-xl">No cards to study</p>
@@ -242,13 +274,18 @@
         <span class="font-medium">Previous</span>
       </button>
 
-      <!-- Keyboard Hints -->
+      <!-- Hints -->
       <div class="text-center text-white text-sm space-y-1">
-        <div class="text-indigo-200">Keyboard Shortcuts</div>
-        <div class="flex gap-4 text-xs text-white text-opacity-70">
-          <span>← → Navigate</span>
-          <span>Space/Enter Flip</span>
-          <span>Esc Exit</span>
+        <div class="keyboard-hints">
+          <div class="text-indigo-200 text-xs mb-1">Keyboard Shortcuts</div>
+          <div class="flex gap-4 text-xs text-white opacity-70">
+            <span>← → Navigate</span>
+            <span>Space/Enter Flip</span>
+            <span>Esc Exit</span>
+          </div>
+        </div>
+        <div class="touch-hints text-xs text-indigo-200 opacity-80">
+          Swipe left/right to navigate · Tap to flip
         </div>
       </div>
 
@@ -266,3 +303,13 @@
     </div>
   </div>
 </div>
+
+<style>
+  .keyboard-hints { display: flex; flex-direction: column; align-items: center; }
+  .touch-hints { display: none; }
+
+  @media (hover: none) {
+    .keyboard-hints { display: none; }
+    .touch-hints { display: block; }
+  }
+</style>

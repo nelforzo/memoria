@@ -108,9 +108,9 @@
 
   <!-- Notification Toast -->
   {#if notification.show}
-    <div class="fixed top-4 right-4 z-50 animate-slide-in">
+    <div class="fixed top-4 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-md z-50 animate-slide-in">
       <div
-        class="bg-white rounded-lg shadow-lg border-l-4 p-4 max-w-md"
+        class="bg-white rounded-lg shadow-lg border-l-4 p-4"
         class:border-green-500={notification.type === 'success'}
         class:border-red-500={notification.type === 'error'}
       >

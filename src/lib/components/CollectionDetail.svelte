@@ -149,12 +149,12 @@
   <!-- Header -->
   <header class="bg-white shadow-sm border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-      <div class="flex items-center justify-between">
+      <div class="flex flex-col gap-3">
+        <!-- Row 1: back button + title -->
         <div class="flex items-center gap-4">
-          <!-- Back Button -->
           <button
             on:click={onBack}
-            class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            class="p-3 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
             aria-label="Back to collections"
           >
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -162,59 +162,58 @@
             </svg>
           </button>
 
-          <!-- Collection Info -->
           {#if collection}
-            <div>
-              <h1 class="text-2xl font-bold text-gray-900">{collection.name}</h1>
+            <div class="min-w-0">
+              <h1 class="text-2xl font-bold text-gray-900 truncate">{collection.name}</h1>
               {#if collection.description}
-                <p class="text-sm text-gray-600 mt-1">{collection.description}</p>
+                <p class="text-sm text-gray-600 mt-1 line-clamp-1">{collection.description}</p>
               {/if}
             </div>
           {/if}
         </div>
 
-        <!-- Action Buttons -->
+        <!-- Row 2: action buttons -->
         {#if !loading && $cards.length > 0}
-          <div class="flex gap-3">
-            <!-- Export Button -->
+          <div class="flex flex-wrap gap-2">
             <button
               on:click={handleExport}
               disabled={isExporting}
-              class="inline-flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              class="inline-flex items-center min-h-[44px] px-3 py-2 text-gray-700 hover:bg-gray-100 font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Export collection"
             >
               {#if isExporting}
-                <svg class="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
+                <svg class="animate-spin h-5 w-5 sm:mr-2" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
                 </svg>
               {:else}
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                 </svg>
               {/if}
-              Export
+              <span class="hidden sm:inline">Export</span>
             </button>
 
-            <!-- Study Button -->
             <button
               on:click={openStudyMode}
-              class="inline-flex items-center px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm"
+              class="inline-flex items-center min-h-[44px] px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm"
+              aria-label="Study cards"
             >
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
               </svg>
-              Study
+              <span class="hidden sm:inline">Study</span>
             </button>
 
-            <!-- Add Card Button -->
             <button
               on:click={openCreateDialog}
-              class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+              class="inline-flex items-center min-h-[44px] px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+              aria-label="Add card"
             >
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
               </svg>
-              Add Card
+              <span class="hidden sm:inline">Add Card</span>
             </button>
           </div>
         {/if}
@@ -222,7 +221,7 @@
 
       <!-- Stats Bar -->
       {#if collection}
-        <div class="flex items-center gap-6 mt-4 pt-4 border-t border-gray-100 text-sm text-gray-600">
+        <div class="flex flex-wrap items-center gap-4 sm:gap-6 mt-4 pt-4 border-t border-gray-100 text-sm text-gray-600">
           <div class="flex items-center">
             <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
@@ -243,9 +242,9 @@
 
   <!-- Notification Toast -->
   {#if notification.show}
-    <div class="fixed top-4 right-4 z-50 animate-slide-in">
+    <div class="fixed top-4 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-md z-50 animate-slide-in">
       <div
-        class="bg-white rounded-lg shadow-lg border-l-4 p-4 max-w-md"
+        class="bg-white rounded-lg shadow-lg border-l-4 p-4"
         class:border-green-500={notification.type === 'success'}
         class:border-red-500={notification.type === 'error'}
       >

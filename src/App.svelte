@@ -118,16 +118,16 @@
     <header class="bg-white shadow-sm border-b border-gray-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div class="flex items-center justify-between">
-          <div>
-            <h1 class="text-2xl font-bold text-gray-900">Memoria</h1>
+          <div class="min-w-0">
+            <h1 class="text-2xl font-bold text-gray-900 truncate">Memoria</h1>
             <p class="text-sm text-gray-600">Your multimedia flashcard companion</p>
           </div>
 
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2 flex-shrink-0">
             {#if dbReady}
               <button
                 on:click={navigateToSettings}
-                class="inline-flex items-center px-3 py-2 text-gray-700 hover:bg-gray-100 font-medium rounded-lg transition-colors"
+                class="inline-flex items-center min-h-[44px] px-3 py-2 text-gray-700 hover:bg-gray-100 font-medium rounded-lg transition-colors"
                 aria-label="Settings"
               >
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -141,12 +141,12 @@
             {#if dbReady && $collections.length > 0}
               <button
                 on:click={openCreateDialog}
-                class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+                class="inline-flex items-center min-h-[44px] px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
               >
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
-                New Collection
+                <span class="hidden sm:inline">New Collection</span>
               </button>
             {/if}
           </div>
@@ -157,9 +157,9 @@
 
   <!-- Notification Toast -->
   {#if notification.show}
-    <div class="fixed top-4 right-4 z-50 animate-slide-in">
+    <div class="fixed top-4 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-md z-50 animate-slide-in">
       <div
-        class="bg-white rounded-lg shadow-lg border-l-4 p-4 max-w-md"
+        class="bg-white rounded-lg shadow-lg border-l-4 p-4"
         class:border-green-500={notification.type === 'success'}
         class:border-red-500={notification.type === 'error'}
       >

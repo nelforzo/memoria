@@ -26,9 +26,9 @@
     resetForm();
   }
 
-  const isEdit = card !== null;
-  const title = isEdit ? 'Edit Card' : 'New Card';
-  const submitLabel = isEdit ? 'Save Changes' : 'Add Card';
+  $: isEdit = card !== null;
+  $: title = isEdit ? 'Edit Card' : 'New Card';
+  $: submitLabel = isEdit ? 'Save Changes' : 'Add Card';
 
   function resetForm() {
     if (!card) {
@@ -107,7 +107,7 @@
 
 {#if isOpen}
   <div
-    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center p-4 z-50 overflow-y-auto"
     on:click={handleBackdropClick}
     on:keydown={handleKeydown}
     role="dialog"
@@ -115,7 +115,7 @@
     aria-labelledby="modal-title"
     tabindex="-1"
   >
-    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[85dvh] overflow-y-auto my-auto">
       <!-- Header -->
       <div class="flex items-center justify-between p-6 border-b border-gray-200">
         <h2 id="modal-title" class="text-2xl font-semibold text-gray-900">
@@ -123,7 +123,7 @@
         </h2>
         <button
           on:click={close}
-          class="text-gray-400 hover:text-gray-600 transition-colors"
+          class="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           aria-label="Close"
         >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -151,7 +151,7 @@
             placeholder="Enter the card content (e.g., question on one line, answer on another)&#10;&#10;Example:&#10;What is the capital of France?&#10;Paris"
             maxlength="5000"
             rows="10"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-colors resize-y font-mono text-sm"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-colors resize-y font-mono text-base"
             class:border-red-500={errors.text}
             disabled={isSubmitting}
           ></textarea>

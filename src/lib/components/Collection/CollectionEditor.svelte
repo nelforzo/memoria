@@ -22,9 +22,9 @@
     resetForm();
   }
 
-  const isEdit = collection !== null;
-  const title = isEdit ? 'Edit Collection' : 'New Collection';
-  const submitLabel = isEdit ? 'Save Changes' : 'Create Collection';
+  $: isEdit = collection !== null;
+  $: title = isEdit ? 'Edit Collection' : 'New Collection';
+  $: submitLabel = isEdit ? 'Save Changes' : 'Create Collection';
 
   function resetForm() {
     if (!collection) {
@@ -97,7 +97,7 @@
 
 {#if isOpen}
   <div
-    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center p-4 z-50 overflow-y-auto"
     on:click={handleBackdropClick}
     on:keydown={handleKeydown}
     role="dialog"
@@ -105,7 +105,7 @@
     aria-labelledby="modal-title"
     tabindex="-1"
   >
-    <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[85dvh] overflow-y-auto my-auto">
       <!-- Header -->
       <div class="flex items-center justify-between p-6 border-b border-gray-200">
         <h2 id="modal-title" class="text-2xl font-semibold text-gray-900">
@@ -113,7 +113,7 @@
         </h2>
         <button
           on:click={close}
-          class="text-gray-400 hover:text-gray-600 transition-colors"
+          class="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           aria-label="Close"
         >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -141,7 +141,7 @@
             bind:value={name}
             placeholder="e.g., Spanish Vocabulary"
             maxlength="100"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-colors"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-colors text-base"
             class:border-red-500={errors.name}
             disabled={isSubmitting}
           />
@@ -166,7 +166,7 @@
             placeholder="Add a description to help you remember what this collection is for..."
             maxlength="500"
             rows="4"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-colors resize-none"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-colors resize-none text-base"
             class:border-red-500={errors.description}
             disabled={isSubmitting}
           ></textarea>
