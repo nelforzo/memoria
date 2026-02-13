@@ -114,10 +114,10 @@ export class AudioRecorder {
    */
   getSupportedMimeType() {
     const types = [
-      'audio/webm;codecs=opus',
+      'audio/mp4',                // Safari (iOS + macOS) — must be first
+      'audio/webm;codecs=opus',   // Chrome, Firefox, Edge
       'audio/webm',
       'audio/ogg;codecs=opus',
-      'audio/mp4',
       'audio/mpeg'
     ];
 

@@ -93,7 +93,7 @@ export function createSettings(container, { onBack }) {
     // App info
     content.insertAdjacentHTML('beforeend', `
       <div class="app-info">
-        <p>メモリア v1.1.0</p>
+        <p>メモリア v1.1.1</p>
         <p style="margin-top:var(--sp-1)">すべてのデータはお使いのデバイスにローカル保存されます</p>
       </div>
     `);
