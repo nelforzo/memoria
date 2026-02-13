@@ -3,6 +3,7 @@
  */
 
 import { formatRelativeTime, truncateText } from '../../utils/helpers.js';
+import { blobToDataURL } from '../../utils/imageCompression.js';
 import { debugLog } from '../../utils/debugLog.js';
 
 export function createCardListItem(container, { card, onEdit, onDelete }) {
@@ -10,20 +11,32 @@ export function createCardListItem(container, { card, onEdit, onDelete }) {
   const el = document.createElement('div');
   container.appendChild(el);
 
-  // Blob URL management
+  // Thumbnail — stored as a data URL (base64) to avoid Safari's blob URL
+  // lifetime issues with IndexedDB-sourced Blobs.
   let thumbnailUrl = null;
+  let thumbnailBlobRef = null; // track which blob the data URL was built from
 
-  function syncThumbnail() {
-    if (thumbnailUrl) { URL.revokeObjectURL(thumbnailUrl); debugLog.add(`[IMG] revoked thumbnail for card ${card.id}`); }
-    if (card.imageBlob instanceof Blob && card.imageBlob.size > 0) {
-      thumbnailUrl = URL.createObjectURL(card.imageBlob);
-      debugLog.add(`[IMG] created thumbnail for card ${card.id} (${card.imageBlob.size}B ${card.imageBlob.type})`);
-    } else {
+  async function syncThumbnail() {
+    if (!(card.imageBlob instanceof Blob) || card.imageBlob.size === 0) {
       thumbnailUrl = null;
+      thumbnailBlobRef = null;
+      return;
+    }
+    // Skip if we already have a data URL for this exact Blob instance
+    if (card.imageBlob === thumbnailBlobRef && thumbnailUrl) return;
+    try {
+      thumbnailUrl = await blobToDataURL(card.imageBlob);
+      thumbnailBlobRef = card.imageBlob;
+      debugLog.add(`[IMG] created data URL thumbnail for card ${card.id} (${card.imageBlob.size}B ${card.imageBlob.type})`);
+    } catch (e) {
+      thumbnailUrl = null;
+      thumbnailBlobRef = null;
+      debugLog.add(`[IMG] blobToDataURL failed for card ${card.id}: ${e}`);
     }
   }
 
-  syncThumbnail();
+  // Initialise asynchronously then render
+  syncThumbnail().then(() => render());
 
   function getPreview(text) {
     const lines = text.split('\n').filter(l => l.trim());
@@ -123,18 +136,21 @@ export function createCardListItem(container, { card, onEdit, onDelete }) {
   }
   window.addEventListener('click', handleOutsideClick);
 
+  // Note: render() is called by the async syncThumbnail().then(render) above.
+  // Render an initial skeleton immediately so the element appears in the list,
+  // then the async init above will re-render once the thumbnail is ready.
   render();
 
   return {
     destroy() {
       window.removeEventListener('click', handleOutsideClick);
-      if (thumbnailUrl) { URL.revokeObjectURL(thumbnailUrl); debugLog.add(`[IMG] revoked thumbnail (destroy) card ${card.id}`); }
+      // Data URLs don't need revocation
+      debugLog.add(`[IMG] destroy card ${card.id} (data URL — no revoke needed)`);
       el.remove();
     },
     update(newCard) {
       card = newCard;
-      syncThumbnail();
-      render();
+      syncThumbnail().then(() => render());
     }
   };
 }

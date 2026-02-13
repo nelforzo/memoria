@@ -238,10 +238,11 @@ export function createCollectionDetail(container, { collectionId, onBack }) {
     }
   }
 
-  // Subscribe to cards store for reactive updates
+  // Subscribe to cards store for reactive updates.
+  // Skip updates while study mode is open — the card list is hidden and the
+  // churn of creating/revoking blob URLs causes Safari blob URL failures.
   unsub = cards.subscribe(() => {
-    // Only re-render card list portion if not loading
-    if (!loading && cardList) {
+    if (!loading && cardList && !studyModeInstance) {
       cardList.update(cards.get());
     }
   });
