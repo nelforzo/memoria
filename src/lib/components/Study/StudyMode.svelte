@@ -30,12 +30,13 @@
       audioListenersAttached = true;
     }
     audioElement.pause();
-    if (!url) {
-      audioElement.removeAttribute('src');
-    } else {
+    // Only touch src/load when there IS a URL to load.
+    // Calling removeAttribute('src') + load() puts Safari's audio element
+    // into a broken state that it won't recover from on subsequent loads.
+    if (url) {
       audioElement.src = url;
+      audioElement.load();
     }
-    audioElement.load(); // explicit load() required on Safari
   }
 
   function playAudio() {

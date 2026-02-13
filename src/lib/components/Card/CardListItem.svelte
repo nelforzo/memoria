@@ -1,4 +1,5 @@
 <script>
+  import { onDestroy } from 'svelte';
   import { formatRelativeTime, truncateText } from '../../utils/helpers.js';
 
   export let card;
@@ -6,6 +7,23 @@
   export let onDelete = null;
 
   let showMenu = false;
+
+  // Manage thumbnail blob URL — create once per distinct Blob, revoke on destroy
+  let thumbnailUrl = null;
+  let _trackedBlob = undefined;
+
+  function syncThumbnailUrl(blob) {
+    if (blob === _trackedBlob) return;
+    if (thumbnailUrl) URL.revokeObjectURL(thumbnailUrl);
+    _trackedBlob = blob;
+    thumbnailUrl = blob ? URL.createObjectURL(blob) : null;
+  }
+
+  $: syncThumbnailUrl(card.imageBlob);
+
+  onDestroy(() => {
+    if (thumbnailUrl) URL.revokeObjectURL(thumbnailUrl);
+  });
 
   function toggleMenu() {
     showMenu = !showMenu;
@@ -85,10 +103,10 @@
   <div class="pr-8">
     <!-- Card Icon/Thumbnail and Text -->
     <div class="flex items-start mb-2">
-      {#if card.imageBlob}
+      {#if thumbnailUrl}
         <!-- Image Thumbnail -->
         <img
-          src={URL.createObjectURL(card.imageBlob)}
+          src={thumbnailUrl}
           alt="Card thumbnail"
           class="flex-shrink-0 w-16 h-16 object-cover rounded mr-3"
         />
