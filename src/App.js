@@ -23,7 +23,12 @@ export function createApp(target) {
   let settingsInstance = null;
   let unsub = null;
 
-  // Shared components
+  // View container — cleared on navigation; shared overlays live outside it
+  const viewContainer = document.createElement('div');
+  target.appendChild(viewContainer);
+
+  // Shared components — appended to target (outside viewContainer) so they
+  // survive viewContainer.innerHTML = '' across navigations
   const notify = createNotification(target);
   const dialog = createConfirmDialog(target);
   const editor = createCollectionEditor(target);
@@ -49,10 +54,7 @@ export function createApp(target) {
   function render() {
     // Destroy previous view instances
     destroyViews();
-    target.innerHTML = '';
-
-    // Re-append shared components
-    target.appendChild(notify._el || document.createComment(''));
+    viewContainer.innerHTML = '';
 
     if (!dbReady) {
       renderDbError();
@@ -62,19 +64,19 @@ export function createApp(target) {
     if (currentView === 'home') {
       renderHome();
     } else if (currentView === 'collection-detail') {
-      collectionDetailInstance = createCollectionDetail(target, {
+      collectionDetailInstance = createCollectionDetail(viewContainer, {
         collectionId: selectedCollectionId,
         onBack: navigateToHome
       });
     } else if (currentView === 'settings') {
-      settingsInstance = createSettings(target, {
+      settingsInstance = createSettings(viewContainer, {
         onBack: navigateToHome
       });
     }
   }
 
   function renderDbError() {
-    target.innerHTML = `
+    viewContainer.innerHTML = `
       <main class="page-bg">
         <div class="container" style="padding-top:var(--sp-8)">
           <div class="card" style="text-align:center;padding:var(--sp-8)">
@@ -119,14 +121,14 @@ export function createApp(target) {
         </div>
       </div>
     `;
-    target.appendChild(header);
+    viewContainer.appendChild(header);
 
     // Content
     const content = document.createElement('div');
     content.className = 'container';
     content.style.paddingTop = 'var(--sp-8)';
     content.style.paddingBottom = 'var(--sp-8)';
-    target.appendChild(content);
+    viewContainer.appendChild(content);
 
     collectionListInstance = createCollectionList(content, {
       collections: collections.get(),
