@@ -120,8 +120,8 @@
     showStudyMode = true;
   }
 
-  function closeStudyMode() {
-    resetViewport(); // Fix Safari zoom-stuck bug before removing the fixed overlay
+  async function closeStudyMode() {
+    await resetViewport(); // wait for Safari to snap viewport before removing the overlay
     showStudyMode = false;
     cards.load(collectionId);
   }

@@ -14,11 +14,28 @@
   let currentImageUrl = null;
   let currentAudioUrl = null;
   const urlCache = new Map(); // Map<cardId, { imageUrl, audioUrl }>
+  let audioElement; // bound via bind:this — stable DOM node, never destroyed
 
   $: currentCard = studyCards[currentIndex];
 
+  function updateAudioElement(url) {
+    if (!audioElement) return;
+    audioElement.pause();
+    if (!url) {
+      audioElement.removeAttribute('src');
+    } else {
+      audioElement.src = url;
+    }
+    audioElement.load(); // explicit load() required on Safari
+  }
+
   function ensureUrlsForCard(card) {
-    if (!card) { currentImageUrl = null; currentAudioUrl = null; return; }
+    if (!card) {
+      currentImageUrl = null;
+      currentAudioUrl = null;
+      updateAudioElement(null);
+      return;
+    }
     if (!urlCache.has(card.id)) {
       urlCache.set(card.id, {
         imageUrl: card.imageBlob ? URL.createObjectURL(card.imageBlob) : null,
@@ -28,6 +45,7 @@
     const cached = urlCache.get(card.id);
     currentImageUrl = cached.imageUrl;
     currentAudioUrl = cached.audioUrl;
+    updateAudioElement(cached.audioUrl);
   }
   $: progress = studyCards.length > 0 ? `${currentIndex + 1} / ${studyCards.length}` : '0 / 0';
   $: canGoPrevious = currentIndex > 0;
@@ -182,6 +200,16 @@
   <div class="flex-1 flex items-center justify-center p-8">
     <div class="max-w-4xl w-full">
       {#if currentCard}
+        <!-- Audio player — outside {#key} so the element is never destroyed/recreated -->
+        <div
+          class="mb-4 w-full max-w-md mx-auto"
+          style:display={currentAudioUrl ? 'block' : 'none'}
+          on:click|stopPropagation
+          role="none"
+        >
+          <audio bind:this={audioElement} controls class="w-full"></audio>
+        </div>
+
         <!-- Card Container -->
         {#key currentCard.id}
         <div class="relative">
@@ -203,17 +231,6 @@
                   alt=""
                   class="max-w-full max-h-64 mx-auto rounded-lg shadow-lg object-contain"
                 />
-              </div>
-            {/if}
-
-            <!-- Audio Display (if present) -->
-            {#if currentAudioUrl}
-              <div class="mb-6 w-full max-w-md mx-auto" on:click|stopPropagation role="none">
-                <audio
-                  controls
-                  src={currentAudioUrl}
-                  class="w-full"
-                ></audio>
               </div>
             {/if}
 
@@ -268,47 +285,17 @@
     </div>
   </div>
 
-  <!-- Navigation Controls -->
-  <div class="bg-black bg-opacity-30 backdrop-blur-sm border-t border-white border-opacity-10 p-6">
-    <div class="max-w-4xl mx-auto flex items-center justify-between">
-      <!-- Previous Button -->
-      <button
-        on:click={goToPrevious}
-        disabled={!canGoPrevious}
-        class="flex items-center gap-2 px-6 py-3 bg-white bg-opacity-10 hover:bg-opacity-20 disabled:bg-opacity-5 text-white rounded-lg transition-colors disabled:cursor-not-allowed disabled:text-opacity-30"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-        </svg>
-        <span class="font-medium">Previous</span>
-      </button>
-
-      <!-- Hints -->
-      <div class="text-center text-white text-sm space-y-1">
-        <div class="keyboard-hints">
-          <div class="text-indigo-200 text-xs mb-1">Keyboard Shortcuts</div>
-          <div class="flex gap-4 text-xs text-white opacity-70">
-            <span>← → Navigate</span>
-            <span>Space/Enter Flip</span>
-            <span>Esc Exit</span>
-          </div>
-        </div>
-        <div class="touch-hints text-xs text-indigo-200 opacity-80">
-          Swipe left/right to navigate · Tap to flip
-        </div>
-      </div>
-
-      <!-- Next Button -->
-      <button
-        on:click={goToNext}
-        disabled={!canGoNext}
-        class="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-opacity-30 text-white rounded-lg transition-colors disabled:cursor-not-allowed font-medium"
-      >
-        <span>Next</span>
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-        </svg>
-      </button>
+  <!-- Hints strip -->
+  <div class="py-3 text-center">
+    <div class="keyboard-hints text-white text-xs opacity-60">
+      <span>Arrow keys navigate</span>
+      <span class="mx-3">·</span>
+      <span>Space / Enter flip</span>
+      <span class="mx-3">·</span>
+      <span>Esc exit</span>
+    </div>
+    <div class="touch-hints text-indigo-200 text-xs opacity-70">
+      Swipe left / right to navigate · Tap to flip
     </div>
   </div>
 </div>
