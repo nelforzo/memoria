@@ -27,8 +27,8 @@
   }
 
   $: isEdit = card !== null;
-  $: title = isEdit ? 'Edit Card' : 'New Card';
-  $: submitLabel = isEdit ? 'Save Changes' : 'Add Card';
+  $: title = isEdit ? 'カードを編集' : '新しいカード';
+  $: submitLabel = isEdit ? '変更を保存' : 'カードを追加';
 
   function resetForm() {
     if (!card) {
@@ -52,9 +52,9 @@
     errors = {};
 
     if (!text.trim()) {
-      errors.text = 'Card text is required';
+      errors.text = 'カードのテキストは必須です';
     } else if (text.trim().length > 5000) {
-      errors.text = 'Card text must be 5000 characters or less';
+      errors.text = 'カードのテキストは5000文字以内で入力してください';
     }
 
     return Object.keys(errors).length === 0;
@@ -81,7 +81,7 @@
       close();
     } catch (error) {
       console.error('Failed to submit:', error);
-      errors.general = 'Failed to save card. Please try again.';
+      errors.general = 'カードの保存に失敗しました。もう一度お試しください。';
     } finally {
       isSubmitting = false;
     }
@@ -124,7 +124,7 @@
         <button
           on:click={close}
           class="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-          aria-label="Close"
+          aria-label="閉じる"
         >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -143,12 +143,12 @@
         <!-- Text Field -->
         <div class="mb-6">
           <label for="card-text" class="block text-sm font-medium text-gray-700 mb-2">
-            Card Content <span class="text-red-500">*</span>
+            カードの内容 <span class="text-red-500">*</span>
           </label>
           <textarea
             id="card-text"
             bind:value={text}
-            placeholder="Enter the card content (e.g., question on one line, answer on another)&#10;&#10;Example:&#10;What is the capital of France?&#10;Paris"
+            placeholder="カードの内容を入力（例：1行目に質問、2行目に答え）&#10;&#10;例：&#10;フランスの首都はどこですか？&#10;パリ"
             maxlength="5000"
             rows="10"
             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-colors resize-y font-mono text-base"
@@ -160,7 +160,7 @@
               <p class="text-sm text-red-600">{errors.text}</p>
             {:else}
               <p class="text-xs text-gray-500">
-                💡 Tip: You can use multiple lines to separate question and answer
+                💡 ヒント：複数行を使って質問と答えを分けることができます
               </p>
             {/if}
             <p class="text-xs text-gray-400">{text.length}/5000</p>
@@ -170,7 +170,7 @@
         <!-- Photo Upload -->
         <div class="mb-6">
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            Photo <span class="text-gray-400 text-xs">(optional)</span>
+            写真 <span class="text-gray-400 text-xs">（任意）</span>
           </label>
           <ImageCapture
             {imageBlob}
@@ -182,7 +182,7 @@
         <!-- Audio Recording -->
         <div class="mb-6">
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            Audio <span class="text-gray-400 text-xs">(optional)</span>
+            音声 <span class="text-gray-400 text-xs">（任意）</span>
           </label>
           <AudioRecorder
             {audioBlob}
@@ -199,7 +199,7 @@
             disabled={isSubmitting}
             class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Cancel
+            キャンセル
           </button>
           <button
             type="submit"
@@ -211,7 +211,7 @@
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
               </svg>
-              Saving...
+              保存中...
             {:else}
               {submitLabel}
             {/if}

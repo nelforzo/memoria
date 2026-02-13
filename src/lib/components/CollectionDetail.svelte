@@ -43,7 +43,7 @@
       await cards.load(collectionId);
     } catch (error) {
       console.error('Failed to load collection:', error);
-      showNotification('Failed to load collection', 'error');
+      showNotification('コレクションの読み込みに失敗しました', 'error');
     } finally {
       loading = false;
     }
@@ -74,9 +74,9 @@
   async function handleCreate(event) {
     try {
       await cards.create(collectionId, event.detail);
-      showNotification('Card added successfully!');
+      showNotification('カードを追加しました！');
     } catch (error) {
-      showNotification('Failed to add card', 'error');
+      showNotification('カードの追加に失敗しました', 'error');
     }
   }
 
@@ -84,9 +84,9 @@
     try {
       const { id, ...updates } = event.detail;
       await cards.update(id, updates);
-      showNotification('Card updated successfully!');
+      showNotification('カードを更新しました！');
     } catch (error) {
-      showNotification('Failed to update card', 'error');
+      showNotification('カードの更新に失敗しました', 'error');
     }
   }
 
@@ -95,10 +95,10 @@
 
     try {
       await cards.delete(deletingCard.id, collectionId);
-      showNotification('Card deleted successfully!');
+      showNotification('カードを削除しました！');
       deletingCard = null;
     } catch (error) {
-      showNotification('Failed to delete card', 'error');
+      showNotification('カードの削除に失敗しました', 'error');
     }
   }
 
@@ -114,7 +114,7 @@
 
   function openStudyMode() {
     if ($cards.length === 0) {
-      showNotification('Add some cards first before studying!', 'error');
+      showNotification('学習を開始する前に、まずカードを追加してください！', 'error');
       return;
     }
     showStudyMode = true;
@@ -128,7 +128,7 @@
 
   async function handleExport() {
     if ($cards.length === 0) {
-      showNotification('No cards to export', 'error');
+      showNotification('エクスポートするカードがありません', 'error');
       return;
     }
 
@@ -136,10 +136,10 @@
 
     try {
       await exportCollection(collectionId);
-      showNotification('Collection exported successfully!');
+      showNotification('コレクションをエクスポートしました！');
     } catch (error) {
       console.error('Export failed:', error);
-      showNotification('Failed to export collection', 'error');
+      showNotification('コレクションのエクスポートに失敗しました', 'error');
     } finally {
       isExporting = false;
     }
@@ -156,7 +156,7 @@
           <button
             on:click={onBack}
             class="p-3 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
-            aria-label="Back to collections"
+            aria-label="コレクション一覧に戻る"
           >
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
@@ -180,7 +180,7 @@
               on:click={handleExport}
               disabled={isExporting}
               class="inline-flex items-center min-h-[44px] px-3 py-2 text-gray-700 hover:bg-gray-100 font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              aria-label="Export collection"
+              aria-label="コレクションをエクスポート"
             >
               {#if isExporting}
                 <svg class="animate-spin h-5 w-5 sm:mr-2" fill="none" viewBox="0 0 24 24">
@@ -192,29 +192,29 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                 </svg>
               {/if}
-              <span class="hidden sm:inline">Export</span>
+              <span class="hidden sm:inline">エクスポート</span>
             </button>
 
             <button
               on:click={openStudyMode}
               class="inline-flex items-center min-h-[44px] px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm"
-              aria-label="Study cards"
+              aria-label="学習する"
             >
               <svg class="w-5 h-5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
               </svg>
-              <span class="hidden sm:inline">Study</span>
+              <span class="hidden sm:inline">学習</span>
             </button>
 
             <button
               on:click={openCreateDialog}
               class="inline-flex items-center min-h-[44px] px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
-              aria-label="Add card"
+              aria-label="カードを追加"
             >
               <svg class="w-5 h-5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
               </svg>
-              <span class="hidden sm:inline">Add Card</span>
+              <span class="hidden sm:inline">カードを追加</span>
             </button>
           </div>
         {/if}
@@ -228,13 +228,13 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
             </svg>
             <span class="font-medium">{$cards.length}</span>
-            <span class="ml-1">cards</span>
+            <span class="ml-1">枚</span>
           </div>
           <div class="flex items-center">
             <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            <span>Updated {formatRelativeTime(collection.updatedAt)}</span>
+            <span>更新：{formatRelativeTime(collection.updatedAt)}</span>
           </div>
         </div>
       {/if}
@@ -299,10 +299,10 @@
 <!-- Delete Confirmation Dialog -->
 <ConfirmDialog
   isOpen={showDeleteDialog}
-  title="Delete Card"
-  message={deletingCard ? 'Are you sure you want to delete this card? This action cannot be undone.' : ''}
-  confirmLabel="Delete"
-  cancelLabel="Cancel"
+  title="カードを削除"
+  message={deletingCard ? 'このカードを削除しますか？この操作は元に戻せません。' : ''}
+  confirmLabel="削除"
+  cancelLabel="キャンセル"
   isDanger={true}
   on:confirm={handleDelete}
   on:cancel={handleDeleteCancel}

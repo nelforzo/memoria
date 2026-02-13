@@ -22,7 +22,7 @@
 
   async function handleExportAll() {
     if ($collections.length === 0) {
-      showNotification('No collections to export', 'error');
+      showNotification('エクスポートするコレクションがありません', 'error');
       return;
     }
 
@@ -30,10 +30,10 @@
 
     try {
       await exportAllCollections();
-      showNotification(`Exported ${$collections.length} collection(s) successfully!`);
+      showNotification(`${$collections.length} 件のコレクションをエクスポートしました！`);
     } catch (error) {
       console.error('Export failed:', error);
-      showNotification('Failed to export collections', 'error');
+      showNotification('コレクションのエクスポートに失敗しました', 'error');
     } finally {
       isExporting = false;
     }
@@ -53,7 +53,7 @@
     const validation = await validateImportFile(file);
 
     if (!validation.valid) {
-      showNotification(`Invalid file: ${validation.error}`, 'error');
+      showNotification(`無効なファイル：${validation.error}`, 'error');
       if (fileInput) fileInput.value = '';
       return;
     }
@@ -72,10 +72,10 @@
       if (result.updated > 0) messages.push(`${result.updated} updated`);
       if (result.skipped > 0) messages.push(`${result.skipped} skipped`);
 
-      showNotification(`Import successful: ${messages.join(', ')}`);
+      showNotification(`インポート成功：${messages.join(', ')}`);
     } catch (error) {
       console.error('Import failed:', error);
-      showNotification(`Failed to import: ${error.message}`, 'error');
+      showNotification(`インポートに失敗しました：${error.message}`, 'error');
     } finally {
       isImporting = false;
       if (fileInput) fileInput.value = '';
@@ -91,7 +91,7 @@
         <button
           on:click={onBack}
           class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-          aria-label="Back to home"
+          aria-label="ホームに戻る"
         >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
@@ -99,8 +99,8 @@
         </button>
 
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">Settings</h1>
-          <p class="text-sm text-gray-600">Manage your data and preferences</p>
+          <h1 class="text-2xl font-bold text-gray-900">設定</h1>
+          <p class="text-sm text-gray-600">データと設定を管理</p>
         </div>
       </div>
     </div>
@@ -134,9 +134,9 @@
   <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Export Section -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-      <h2 class="text-xl font-semibold text-gray-900 mb-4">Export Data</h2>
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">データのエクスポート</h2>
       <p class="text-gray-600 mb-4">
-        Download all your collections, cards, and media as a JSON file. Use this for backup or to transfer your data to another device.
+        全てのコレクション、カード、メディアをJSONファイルとしてダウンロードします。バックアップや他のデバイスへのデータ転送に使用できます。
       </p>
 
       <button
@@ -149,31 +149,31 @@
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
           </svg>
-          Exporting...
+          エクスポート中...
         {:else}
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
           </svg>
-          Export All Collections
+          全コレクションをエクスポート
         {/if}
       </button>
 
       {#if $collections.length === 0}
-        <p class="text-sm text-gray-500 mt-2">No collections to export</p>
+        <p class="text-sm text-gray-500 mt-2">エクスポートするコレクションがありません</p>
       {/if}
     </div>
 
     <!-- Import Section -->
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold text-gray-900 mb-4">Import Data</h2>
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">データのインポート</h2>
       <p class="text-gray-600 mb-4">
-        Import collections from a previously exported JSON file. Choose how to handle existing collections.
+        以前にエクスポートしたJSONファイルからコレクションをインポートします。既存のコレクションの処理方法を選択してください。
       </p>
 
       <!-- Import Strategy -->
       <div class="mb-4">
         <label class="block text-sm font-medium text-gray-700 mb-2">
-          Import Strategy
+          インポート方法
         </label>
         <div class="space-y-2">
           <label class="flex items-center">
@@ -184,8 +184,8 @@
               class="w-4 h-4 text-indigo-600 focus:ring-indigo-500"
             />
             <span class="ml-2 text-sm">
-              <span class="font-medium text-gray-900">Merge</span>
-              <span class="text-gray-600"> - Skip collections that already exist</span>
+              <span class="font-medium text-gray-900">マージ</span>
+              <span class="text-gray-600"> - 既存のコレクションをスキップ</span>
             </span>
           </label>
           <label class="flex items-center">
@@ -196,8 +196,8 @@
               class="w-4 h-4 text-indigo-600 focus:ring-indigo-500"
             />
             <span class="ml-2 text-sm">
-              <span class="font-medium text-gray-900">Replace</span>
-              <span class="text-gray-600"> - Overwrite collections with matching IDs</span>
+              <span class="font-medium text-gray-900">上書き</span>
+              <span class="text-gray-600"> - 同じIDのコレクションを上書き</span>
             </span>
           </label>
         </div>
@@ -222,26 +222,26 @@
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
           </svg>
-          Importing...
+          インポート中...
         {:else}
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
           </svg>
-          Import from File
+          ファイルからインポート
         {/if}
       </button>
 
       <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
         <p class="text-sm text-yellow-800">
-          <strong>Warning:</strong> Using "Replace" strategy will overwrite existing collections with the same ID. Make sure to export your current data first!
+          <strong>警告：</strong>「上書き」を選択すると、同じIDの既存コレクションが上書きされます。事前に現在のデータをエクスポートしてください！
         </p>
       </div>
     </div>
 
     <!-- App Info -->
     <div class="mt-8 text-center text-sm text-gray-500">
-      <p>Memoria v1.0</p>
-      <p class="mt-1">All data is stored locally on your device</p>
+      <p>メモリア v1.0.0</p>
+      <p class="mt-1">すべてのデータはお使いのデバイスにローカル保存されます</p>
     </div>
   </div>
 </div>

@@ -38,7 +38,7 @@
     error = null;
 
     if (!supported) {
-      error = 'Audio recording is not supported in this browser';
+      error = 'このブラウザでは音声録音がサポートされていません';
       return;
     }
 
@@ -59,11 +59,11 @@
       console.error('Failed to start recording:', err);
 
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        error = 'Microphone permission denied. Please allow microphone access and try again.';
+        error = 'マイクへのアクセスが拒否されました。マイクへのアクセスを許可して、もう一度お試しください。';
       } else if (err.name === 'NotFoundError') {
-        error = 'No microphone found. Please connect a microphone and try again.';
+        error = 'マイクが見つかりません。マイクを接続して、もう一度お試しください。';
       } else {
-        error = 'Failed to start recording. Please try again.';
+        error = '録音の開始に失敗しました。もう一度お試しください。';
       }
 
       isRecording = false;
@@ -92,7 +92,7 @@
       dispatch('change', blob);
     } catch (err) {
       console.error('Failed to stop recording:', err);
-      error = 'Failed to save recording. Please try again.';
+      error = '録音の保存に失敗しました。もう一度お試しください。';
       isRecording = false;
     }
 
@@ -136,8 +136,8 @@
   {#if !supported}
     <!-- Not Supported Message -->
     <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm">
-      <p class="font-medium mb-1">Audio recording not supported</p>
-      <p>Your browser doesn't support audio recording. Please use a modern browser like Chrome, Firefox, or Safari.</p>
+      <p class="font-medium mb-1">音声録音非対応</p>
+      <p>お使いのブラウザは音声録音に対応していません。Chrome、Firefox、Safariなどの最新ブラウザをお使いください。</p>
     </div>
   {:else if audioUrl}
     <!-- Audio Player (Preview) -->
@@ -147,7 +147,7 @@
           <svg class="w-5 h-5 text-purple-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clip-rule="evenodd"/>
           </svg>
-          <span class="font-medium">Audio recorded</span>
+          <span class="font-medium">音声録音済み</span>
         </div>
 
         <!-- Remove Button -->
@@ -157,7 +157,7 @@
           disabled={disabled}
           class="text-red-600 hover:text-red-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Remove
+          削除
         </button>
       </div>
 
@@ -193,7 +193,7 @@
         </button>
 
         <div class="flex-1 text-sm text-gray-600">
-          <p>Click play to preview your recording</p>
+          <p>再生ボタンをクリックして録音を確認</p>
         </div>
       </div>
     </div>
@@ -215,7 +215,7 @@
           {formatDuration(recordingDuration)}
         </div>
 
-        <p class="text-sm text-red-700 mb-4">Recording...</p>
+        <p class="text-sm text-red-700 mb-4">録音中...</p>
 
         <!-- Stop Button -->
         <button
@@ -223,7 +223,7 @@
           on:click={stopRecording}
           class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
         >
-          Stop Recording
+          録音を停止
         </button>
       </div>
     </div>
@@ -238,8 +238,8 @@
       <svg class="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
       </svg>
-      <p class="text-sm font-medium text-gray-700 mb-1">Record audio</p>
-      <p class="text-xs text-gray-500">Click to start recording</p>
+      <p class="text-sm font-medium text-gray-700 mb-1">音声を録音</p>
+      <p class="text-xs text-gray-500">クリックして録音を開始</p>
     </button>
   {/if}
 

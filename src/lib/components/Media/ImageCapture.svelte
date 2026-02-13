@@ -45,13 +45,13 @@
 
     // Validate file type
     if (!isValidImage(file)) {
-      error = 'Please select a valid image file (JPEG, PNG, GIF, or WebP)';
+      error = '有効な画像ファイル（JPEG、PNG、GIF、またはWebP）を選択してください';
       return;
     }
 
     // Check file size (max 10MB original)
     if (file.size > 10 * 1024 * 1024) {
-      error = 'Image is too large (max 10MB)';
+      error = '画像のサイズが大きすぎます（最大10MB）';
       return;
     }
 
@@ -70,7 +70,7 @@
       dispatch('change', compressed);
     } catch (err) {
       console.error('Failed to compress image:', err);
-      error = 'Failed to compress image. Please try another image.';
+      error = '画像の圧縮に失敗しました。別の画像をお試しください。';
     } finally {
       isCompressing = false;
     }
@@ -105,7 +105,7 @@
     <div class="relative">
       <img
         src={previewUrl}
-        alt="Selected"
+        alt="選択済み"
         class="w-full h-48 object-cover rounded-lg border border-gray-300"
       />
 
@@ -115,7 +115,7 @@
         on:click={handleRemove}
         disabled={disabled || isCompressing}
         class="absolute top-2 right-2 p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        title="Remove photo"
+        title="写真を削除"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -129,7 +129,7 @@
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
             </svg>
-            <p class="text-sm">Compressing...</p>
+            <p class="text-sm">圧縮中...</p>
           </div>
         </div>
       {/if}
@@ -147,14 +147,14 @@
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
         </svg>
-        <p class="text-sm text-gray-600">Compressing image...</p>
+        <p class="text-sm text-gray-600">画像を圧縮中...</p>
       {:else}
         <svg class="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
-        <p class="text-sm font-medium text-gray-700 mb-1">Add a photo</p>
-        <p class="text-xs text-gray-500">Click to upload or take a photo</p>
-        <p class="text-xs text-gray-400 mt-1">JPEG, PNG, GIF, or WebP (max 10MB)</p>
+        <p class="text-sm font-medium text-gray-700 mb-1">写真を追加</p>
+        <p class="text-xs text-gray-500">クリックしてアップロードまたは撮影</p>
+        <p class="text-xs text-gray-400 mt-1">JPEG、PNG、GIF、またはWebP（最大10MB）</p>
       {/if}
     </button>
   {/if}

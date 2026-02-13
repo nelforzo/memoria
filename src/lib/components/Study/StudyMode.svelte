@@ -194,7 +194,7 @@
           <button
             on:click={handleExit}
             class="p-2 text-white hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors"
-            aria-label="Exit study mode"
+            aria-label="学習モードを終了"
           >
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -203,14 +203,14 @@
 
           <div class="text-white">
             <h1 class="text-lg font-semibold">{collectionName}</h1>
-            <p class="text-sm text-indigo-200">Study Mode</p>
+            <p class="text-sm text-indigo-200">学習モード</p>
           </div>
         </div>
 
         <!-- Progress -->
         <div class="text-white text-right">
           <div class="text-2xl font-bold">{progress}</div>
-          <div class="text-sm text-indigo-200">Cards</div>
+          <div class="text-sm text-indigo-200">枚</div>
         </div>
       </div>
     </div>
@@ -251,7 +251,7 @@
               <!-- Multi-line card with flip -->
               <div class="text-center w-full">
                 {#if showFront}
-                  <div class="text-gray-500 text-sm mb-4 uppercase tracking-wide">Question</div>
+                  <div class="text-gray-500 text-sm mb-4 uppercase tracking-wide">質問</div>
                   <p class="text-xl sm:text-3xl text-gray-900 whitespace-pre-wrap leading-relaxed">
                     {cardSides.front}
                   </p>
@@ -259,10 +259,10 @@
                     <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/>
                     </svg>
-                    Click or press Space to reveal answer
+                    クリックまたはスペースキーで答えを表示
                   </div>
                 {:else}
-                  <div class="text-gray-500 text-sm mb-4 uppercase tracking-wide">Answer</div>
+                  <div class="text-gray-500 text-sm mb-4 uppercase tracking-wide">答え</div>
                   <p class="text-xl sm:text-3xl text-gray-900 whitespace-pre-wrap leading-relaxed">
                     {cardSides.back}
                   </p>
@@ -270,7 +270,7 @@
                     <svg class="w-5 h-5 inline-block mr-2" fill="currentColor" viewBox="0 0 20 20">
                       <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                     </svg>
-                    Click or press Space to see question again
+                    クリックまたはスペースキーで質問に戻る
                   </div>
                 {/if}
               </div>
@@ -286,7 +286,7 @@
 
           <!-- Card Count Badge -->
           <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-indigo-600 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
-            Card {currentIndex + 1}
+            カード {currentIndex + 1}
           </div>
         </div>
         {/key}
@@ -296,7 +296,7 @@
           <div class="mt-6 flex justify-center" on:click|stopPropagation role="none">
             <button
               on:click={playAudio}
-              aria-label={isPlaying ? 'Stop audio' : 'Play audio'}
+              aria-label={isPlaying ? '音声を停止' : '音声を再生'}
               class="relative flex items-center justify-center w-14 h-14 rounded-full bg-indigo-500 hover:bg-indigo-400 active:bg-indigo-600 text-white shadow-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-indigo-900"
             >
               {#if isPlaying}
@@ -317,7 +317,7 @@
 
       {:else}
         <div class="text-center text-white">
-          <p class="text-xl">No cards to study</p>
+          <p class="text-xl">学習するカードがありません</p>
         </div>
       {/if}
     </div>
@@ -326,14 +326,14 @@
   <!-- Hints strip -->
   <div class="py-3 text-center">
     <div class="keyboard-hints text-white text-xs opacity-60">
-      <span>Arrow keys navigate</span>
+      <span>矢印キーで移動</span>
       <span class="mx-3">·</span>
-      <span>Space / Enter flip</span>
+      <span>スペース / Enter でめくる</span>
       <span class="mx-3">·</span>
-      <span>Esc exit</span>
+      <span>Esc で終了</span>
     </div>
     <div class="touch-hints text-indigo-200 text-xs opacity-70">
-      Swipe left / right to navigate · Tap to flip
+      左右スワイプで移動 · タップでめくる
     </div>
   </div>
 </div>

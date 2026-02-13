@@ -58,9 +58,9 @@
   async function handleCreate(event) {
     try {
       await collections.create(event.detail);
-      showNotification('Collection created successfully!');
+      showNotification('コレクションを作成しました！');
     } catch (error) {
-      showNotification('Failed to create collection', 'error');
+      showNotification('コレクションの作成に失敗しました', 'error');
     }
   }
 
@@ -68,9 +68,9 @@
     try {
       const { id, ...updates } = event.detail;
       await collections.update(id, updates);
-      showNotification('Collection updated successfully!');
+      showNotification('コレクションを更新しました！');
     } catch (error) {
-      showNotification('Failed to update collection', 'error');
+      showNotification('コレクションの更新に失敗しました', 'error');
     }
   }
 
@@ -79,10 +79,10 @@
 
     try {
       await collections.delete(deletingCollection.id);
-      showNotification('Collection deleted successfully!');
+      showNotification('コレクションを削除しました！');
       deletingCollection = null;
     } catch (error) {
-      showNotification('Failed to delete collection', 'error');
+      showNotification('コレクションの削除に失敗しました', 'error');
     }
   }
 
@@ -119,8 +119,8 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div class="flex items-center justify-between">
           <div class="min-w-0">
-            <h1 class="text-2xl font-bold text-gray-900 truncate">Memoria</h1>
-            <p class="text-sm text-gray-600">Your multimedia flashcard companion</p>
+            <h1 class="text-2xl font-bold text-gray-900 truncate">メモリア</h1>
+            <p class="text-sm text-gray-600">😊</p>
           </div>
 
           <div class="flex items-center gap-2 flex-shrink-0">
@@ -128,13 +128,13 @@
               <button
                 on:click={navigateToSettings}
                 class="inline-flex items-center min-h-[44px] px-3 py-2 text-gray-700 hover:bg-gray-100 font-medium rounded-lg transition-colors"
-                aria-label="Settings"
+                aria-label="設定"
               >
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
-                Settings
+                設定
               </button>
             {/if}
 
@@ -146,7 +146,7 @@
                 <svg class="w-5 h-5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
-                <span class="hidden sm:inline">New Collection</span>
+                <span class="hidden sm:inline">新しいコレクション</span>
               </button>
             {/if}
           </div>
@@ -189,13 +189,13 @@
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
           </svg>
         </div>
-        <h2 class="text-xl font-semibold text-gray-900 mb-2">Database Error</h2>
-        <p class="text-gray-600 mb-4">Failed to initialize the database. Please refresh the page or check browser compatibility.</p>
+        <h2 class="text-xl font-semibold text-gray-900 mb-2">データベースエラー</h2>
+        <p class="text-gray-600 mb-4">データベースの初期化に失敗しました。ページを更新するか、ブラウザの互換性を確認してください。</p>
         <button
           on:click={() => window.location.reload()}
           class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
         >
-          Reload Page
+          ページを再読み込み
         </button>
       </div>
     </div>
@@ -213,7 +213,7 @@
       <!-- Phase Badge -->
       <div class="mt-8 text-center">
         <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-          ✅ Phase 7: Export/Import Functionality
+          v1.0.0
         </span>
       </div>
     </div>
@@ -241,10 +241,10 @@
 <!-- Delete Confirmation Dialog -->
 <ConfirmDialog
   isOpen={showDeleteDialog}
-  title="Delete Collection"
-  message={deletingCollection ? `Are you sure you want to delete "${deletingCollection.name}"? This will also delete all ${deletingCollection.cardCount || 0} cards in this collection. This action cannot be undone.` : ''}
-  confirmLabel="Delete"
-  cancelLabel="Cancel"
+  title="コレクションを削除"
+  message={deletingCollection ? `「${deletingCollection.name}」を削除しますか？このコレクションにある ${deletingCollection.cardCount || 0} 枚のカードも全て削除されます。この操作は元に戻せません。` : ''}
+  confirmLabel="削除"
+  cancelLabel="キャンセル"
   isDanger={true}
   on:confirm={handleDelete}
   on:cancel={handleDeleteCancel}

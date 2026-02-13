@@ -46,7 +46,7 @@
     <button
       on:click|stopPropagation={toggleMenu}
       class="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100"
-      aria-label="Collection options"
+      aria-label="コレクションの操作"
     >
       <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
         <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
@@ -62,7 +62,7 @@
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
           </svg>
-          Edit
+          編集
         </button>
         <button
           on:click={handleDelete}
@@ -71,7 +71,7 @@
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
           </svg>
-          Delete
+          削除
         </button>
       </div>
     {/if}
@@ -89,7 +89,7 @@
       </p>
     {:else}
       <p class="text-gray-400 text-sm italic mb-4">
-        No description
+        説明なし
       </p>
     {/if}
 
@@ -99,11 +99,11 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
         </svg>
         <span class="font-medium">{collection.cardCount || 0}</span>
-        <span class="ml-1">cards</span>
+        <span class="ml-1">枚</span>
       </div>
 
       <div class="text-xs text-gray-400">
-        Updated {formatRelativeTime(collection.updatedAt)}
+        更新：{formatRelativeTime(collection.updatedAt)}
       </div>
     </div>
   </div>

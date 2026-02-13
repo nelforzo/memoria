@@ -23,8 +23,8 @@
   }
 
   $: isEdit = collection !== null;
-  $: title = isEdit ? 'Edit Collection' : 'New Collection';
-  $: submitLabel = isEdit ? 'Save Changes' : 'Create Collection';
+  $: title = isEdit ? 'コレクションを編集' : '新しいコレクション';
+  $: submitLabel = isEdit ? '変更を保存' : 'コレクションを作成';
 
   function resetForm() {
     if (!collection) {
@@ -39,13 +39,13 @@
     errors = {};
 
     if (!name.trim()) {
-      errors.name = 'Collection name is required';
+      errors.name = 'コレクション名は必須です';
     } else if (name.trim().length > 100) {
-      errors.name = 'Collection name must be 100 characters or less';
+      errors.name = 'コレクション名は100文字以内で入力してください';
     }
 
     if (description.length > 500) {
-      errors.description = 'Description must be 500 characters or less';
+      errors.description = '説明は500文字以内で入力してください';
     }
 
     return Object.keys(errors).length === 0;
@@ -71,7 +71,7 @@
       close();
     } catch (error) {
       console.error('Failed to submit:', error);
-      errors.general = 'Failed to save collection. Please try again.';
+      errors.general = 'コレクションの保存に失敗しました。もう一度お試しください。';
     } finally {
       isSubmitting = false;
     }
@@ -114,7 +114,7 @@
         <button
           on:click={close}
           class="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-          aria-label="Close"
+          aria-label="閉じる"
         >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -133,13 +133,13 @@
         <!-- Name Field -->
         <div class="mb-4">
           <label for="collection-name" class="block text-sm font-medium text-gray-700 mb-2">
-            Collection Name <span class="text-red-500">*</span>
+            コレクション名 <span class="text-red-500">*</span>
           </label>
           <input
             id="collection-name"
             type="text"
             bind:value={name}
-            placeholder="e.g., Spanish Vocabulary"
+            placeholder="例：スペイン語の語彙"
             maxlength="100"
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-colors text-base"
             class:border-red-500={errors.name}
@@ -149,7 +149,7 @@
             {#if errors.name}
               <p class="text-sm text-red-600">{errors.name}</p>
             {:else}
-              <p class="text-xs text-gray-500">Required</p>
+              <p class="text-xs text-gray-500">必須</p>
             {/if}
             <p class="text-xs text-gray-400">{name.length}/100</p>
           </div>
@@ -158,12 +158,12 @@
         <!-- Description Field -->
         <div class="mb-6">
           <label for="collection-description" class="block text-sm font-medium text-gray-700 mb-2">
-            Description <span class="text-gray-400 text-xs">(optional)</span>
+            説明 <span class="text-gray-400 text-xs">（任意）</span>
           </label>
           <textarea
             id="collection-description"
             bind:value={description}
-            placeholder="Add a description to help you remember what this collection is for..."
+            placeholder="このコレクションの目的を説明するメモを追加..."
             maxlength="500"
             rows="4"
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-colors resize-none text-base"
@@ -188,7 +188,7 @@
             disabled={isSubmitting}
             class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Cancel
+            キャンセル
           </button>
           <button
             type="submit"
@@ -200,7 +200,7 @@
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
               </svg>
-              Saving...
+              保存中...
             {:else}
               {submitLabel}
             {/if}
