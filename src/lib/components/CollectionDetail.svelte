@@ -121,9 +121,9 @@
   }
 
   async function closeStudyMode() {
-    await resetViewport(); // wait for Safari to snap viewport before removing the overlay
+    await resetViewport();
     showStudyMode = false;
-    cards.load(collectionId);
+    await cards.load(collectionId);
   }
 
   async function handleExport() {

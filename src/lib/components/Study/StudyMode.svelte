@@ -53,10 +53,23 @@
       return;
     }
     if (!urlCache.has(card.id)) {
-      urlCache.set(card.id, {
-        imageUrl: card.imageBlob ? URL.createObjectURL(card.imageBlob) : null,
-        audioUrl: card.audioBlob ? URL.createObjectURL(card.audioBlob) : null
-      });
+      let imageUrl = null;
+      let audioUrl = null;
+      try {
+        if (card.imageBlob instanceof Blob && card.imageBlob.size > 0) {
+          imageUrl = URL.createObjectURL(card.imageBlob);
+        }
+      } catch (e) {
+        console.warn('Failed to create image URL for card', card.id, e);
+      }
+      try {
+        if (card.audioBlob instanceof Blob && card.audioBlob.size > 0) {
+          audioUrl = URL.createObjectURL(card.audioBlob);
+        }
+      } catch (e) {
+        console.warn('Failed to create audio URL for card', card.id, e);
+      }
+      urlCache.set(card.id, { imageUrl, audioUrl });
     }
     const cached = urlCache.get(card.id);
     currentImageUrl = cached.imageUrl;
@@ -66,18 +79,15 @@
   $: progress = studyCards.length > 0 ? `${currentIndex + 1} / ${studyCards.length}` : '0 / 0';
   $: canGoPrevious = currentIndex > 0;
   $: canGoNext = currentIndex < studyCards.length - 1;
+  $: ensureUrlsForCard(currentCard);
+  $: markCurrentCardAsViewed(currentCard);
   $: hasMultipleLines = currentCard && currentCard.text.split('\n').filter(line => line.trim()).length > 1;
 
   onMount(async () => {
     studyCards = [...$cards];
-
     if (studyCards.length === 0) {
       onExit();
-      return;
     }
-
-    ensureUrlsForCard(studyCards[0]);
-    markCurrentCardAsViewed();
   });
 
   onDestroy(() => {
@@ -89,21 +99,16 @@
     resetViewport(); // Safety net for any exit path
   });
 
-  function markCurrentCardAsViewed() {
-    if (!currentCard || viewedCards.has(currentCard.id)) return;
-
-    viewedCards.add(currentCard.id);
-
-    // Update review stats in database
-    cards.markAsReviewed(currentCard.id);
+  function markCurrentCardAsViewed(card) {
+    if (!card || viewedCards.has(card.id)) return;
+    viewedCards.add(card.id);
+    cards.markAsReviewed(card.id);
   }
 
   function goToPrevious() {
     if (canGoPrevious) {
       currentIndex--;
       showFront = true;
-      ensureUrlsForCard(studyCards[currentIndex]);
-      markCurrentCardAsViewed();
     }
   }
 
@@ -111,8 +116,6 @@
     if (canGoNext) {
       currentIndex++;
       showFront = true;
-      ensureUrlsForCard(studyCards[currentIndex]);
-      markCurrentCardAsViewed();
     }
   }
 
@@ -171,6 +174,7 @@
   }
 
   function handleTouchEnd(event) {
+    event.preventDefault();
     const delta = event.changedTouches[0].clientX - touchStartX;
     const SWIPE_THRESHOLD = 50;
     if (delta > SWIPE_THRESHOLD) goToPrevious();
@@ -224,7 +228,7 @@
         <div class="relative">
           <!-- Card -->
           <div
-            class="bg-white rounded-2xl shadow-2xl p-6 sm:p-12 min-h-[200px] sm:min-h-[400px] flex flex-col items-center justify-center cursor-pointer active:scale-[0.98] transition-transform touch-pan-y"
+            class="bg-white rounded-2xl shadow-2xl p-6 sm:p-12 min-h-[200px] sm:min-h-[400px] flex flex-col items-center justify-center cursor-pointer active:scale-[0.98] transition-transform touch-manipulation"
             on:click={toggleFlip}
             on:touchstart={handleTouchStart}
             on:touchend={handleTouchEnd}
