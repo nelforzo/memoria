@@ -15,11 +15,20 @@
   let currentAudioUrl = null;
   const urlCache = new Map(); // Map<cardId, { imageUrl, audioUrl }>
   let audioElement; // bound via bind:this — stable DOM node, never destroyed
+  let isPlaying = false;
+  let audioListenersAttached = false;
 
   $: currentCard = studyCards[currentIndex];
 
   function updateAudioElement(url) {
     if (!audioElement) return;
+    // Attach play-state listeners once, on first use
+    if (!audioListenersAttached) {
+      audioElement.addEventListener('play',  () => { isPlaying = true;  });
+      audioElement.addEventListener('pause', () => { isPlaying = false; });
+      audioElement.addEventListener('ended', () => { isPlaying = false; });
+      audioListenersAttached = true;
+    }
     audioElement.pause();
     if (!url) {
       audioElement.removeAttribute('src');
@@ -27,6 +36,12 @@
       audioElement.src = url;
     }
     audioElement.load(); // explicit load() required on Safari
+  }
+
+  function playAudio() {
+    if (!audioElement || !currentAudioUrl) return;
+    audioElement.currentTime = 0;
+    audioElement.play().catch(() => {});
   }
 
   function ensureUrlsForCard(card) {
@@ -200,15 +215,8 @@
   <div class="flex-1 flex items-center justify-center p-8">
     <div class="max-w-4xl w-full">
       {#if currentCard}
-        <!-- Audio player — outside {#key} so the element is never destroyed/recreated -->
-        <div
-          class="mb-4 w-full max-w-md mx-auto"
-          style:display={currentAudioUrl ? 'block' : 'none'}
-          on:click|stopPropagation
-          role="none"
-        >
-          <audio bind:this={audioElement} controls class="w-full"></audio>
-        </div>
+        <!-- Hidden audio element — stable DOM node, never inside {#key} or {#if currentAudioUrl} -->
+        <audio bind:this={audioElement} class="hidden"></audio>
 
         <!-- Card Container -->
         {#key currentCard.id}
@@ -277,6 +285,31 @@
           </div>
         </div>
         {/key}
+
+        <!-- Custom audio play button -->
+        {#if currentAudioUrl}
+          <div class="mt-6 flex justify-center" on:click|stopPropagation role="none">
+            <button
+              on:click={playAudio}
+              aria-label={isPlaying ? 'Stop audio' : 'Play audio'}
+              class="relative flex items-center justify-center w-14 h-14 rounded-full bg-indigo-500 hover:bg-indigo-400 active:bg-indigo-600 text-white shadow-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-indigo-900"
+            >
+              {#if isPlaying}
+                <span class="absolute inset-0 rounded-full bg-indigo-400 opacity-75 animate-ping" aria-hidden="true"></span>
+              {/if}
+              {#if isPlaying}
+                <svg class="w-6 h-6 relative z-10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <rect x="6" y="6" width="12" height="12" rx="1"/>
+                </svg>
+              {:else}
+                <svg class="w-6 h-6 relative z-10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              {/if}
+            </button>
+          </div>
+        {/if}
+
       {:else}
         <div class="text-center text-white">
           <p class="text-xl">No cards to study</p>
