@@ -24,14 +24,15 @@ export function createConfirmDialog(parent) {
 
   function confirm() {
     const cb = _onConfirm;
-    close();
+    close(false); // not cancelled — don't fire onCancel
     if (cb) cb();
   }
 
-  function close() {
+  function close(cancelled = true) {
     el.innerHTML = '';
     _onConfirm = null;
-    if (_onCancel) { const cb = _onCancel; _onCancel = null; cb(); }
+    if (cancelled && _onCancel) { const cb = _onCancel; _onCancel = null; cb(); }
+    else { _onCancel = null; }
     document.removeEventListener('keydown', handleKeydown);
   }
 
