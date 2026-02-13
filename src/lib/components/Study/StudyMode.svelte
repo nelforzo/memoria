@@ -1,6 +1,7 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
   import { cards } from '../../stores/cards.js';
+  import { resetViewport } from '../../utils/viewportReset.js';
 
   export let collectionId;
   export let collectionName = '';
@@ -12,18 +13,21 @@
   let showFront = true;
   let currentImageUrl = null;
   let currentAudioUrl = null;
+  const urlCache = new Map(); // Map<cardId, { imageUrl, audioUrl }>
 
   $: currentCard = studyCards[currentIndex];
 
-  function revokeCurrentUrls() {
-    if (currentImageUrl) { URL.revokeObjectURL(currentImageUrl); currentImageUrl = null; }
-    if (currentAudioUrl) { URL.revokeObjectURL(currentAudioUrl); currentAudioUrl = null; }
-  }
-
-  $: {
-    revokeCurrentUrls();
-    currentImageUrl = currentCard?.imageBlob ? URL.createObjectURL(currentCard.imageBlob) : null;
-    currentAudioUrl = currentCard?.audioBlob ? URL.createObjectURL(currentCard.audioBlob) : null;
+  function ensureUrlsForCard(card) {
+    if (!card) { currentImageUrl = null; currentAudioUrl = null; return; }
+    if (!urlCache.has(card.id)) {
+      urlCache.set(card.id, {
+        imageUrl: card.imageBlob ? URL.createObjectURL(card.imageBlob) : null,
+        audioUrl: card.audioBlob ? URL.createObjectURL(card.audioBlob) : null
+      });
+    }
+    const cached = urlCache.get(card.id);
+    currentImageUrl = cached.imageUrl;
+    currentAudioUrl = cached.audioUrl;
   }
   $: progress = studyCards.length > 0 ? `${currentIndex + 1} / ${studyCards.length}` : '0 / 0';
   $: canGoPrevious = currentIndex > 0;
@@ -31,21 +35,24 @@
   $: hasMultipleLines = currentCard && currentCard.text.split('\n').filter(line => line.trim()).length > 1;
 
   onMount(async () => {
-    // Load cards for study
     studyCards = [...$cards];
 
     if (studyCards.length === 0) {
-      // No cards to study, exit
       onExit();
       return;
     }
 
-    // Mark first card as viewed
+    ensureUrlsForCard(studyCards[0]);
     markCurrentCardAsViewed();
   });
 
   onDestroy(() => {
-    revokeCurrentUrls();
+    for (const { imageUrl, audioUrl } of urlCache.values()) {
+      if (imageUrl) URL.revokeObjectURL(imageUrl);
+      if (audioUrl) URL.revokeObjectURL(audioUrl);
+    }
+    urlCache.clear();
+    resetViewport(); // Safety net for any exit path
   });
 
   function markCurrentCardAsViewed() {
@@ -61,6 +68,7 @@
     if (canGoPrevious) {
       currentIndex--;
       showFront = true;
+      ensureUrlsForCard(studyCards[currentIndex]);
       markCurrentCardAsViewed();
     }
   }
@@ -69,6 +77,7 @@
     if (canGoNext) {
       currentIndex++;
       showFront = true;
+      ensureUrlsForCard(studyCards[currentIndex]);
       markCurrentCardAsViewed();
     }
   }

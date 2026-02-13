@@ -8,6 +8,7 @@
   import StudyMode from './Study/StudyMode.svelte';
   import { formatRelativeTime } from '../utils/helpers.js';
   import { exportCollection } from '../utils/exportImport.js';
+  import { resetViewport } from '../utils/viewportReset.js';
 
   export let collectionId;
   export let onBack;
@@ -120,8 +121,8 @@
   }
 
   function closeStudyMode() {
+    resetViewport(); // Fix Safari zoom-stuck bug before removing the fixed overlay
     showStudyMode = false;
-    // Reload cards to get updated review stats
     cards.load(collectionId);
   }
 
