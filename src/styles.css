@@ -1057,6 +1057,8 @@ textarea { resize: vertical; }
 
 .study-audio-btn:hover { background: var(--indigo-400); }
 .study-audio-btn:active { background: var(--indigo-600); }
+.study-audio-btn--unsupported { background: var(--gray-600); cursor: not-allowed; opacity: 0.7; }
+.study-audio-btn--unsupported:hover { background: var(--gray-600); }
 
 .study-audio-btn svg { width: 1.5rem; height: 1.5rem; position: relative; z-index: 1; }
 

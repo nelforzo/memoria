@@ -212,6 +212,9 @@ export function createCollectionDetail(container, { collectionId, onBack }) {
   async function closeStudyMode() {
     await resetViewport();
     if (studyModeInstance) { studyModeInstance.destroy(); studyModeInstance = null; }
+    // Destroy cardList before loading so the store subscriber doesn't fire an
+    // intermediate update (creating blob URLs that are immediately revoked).
+    if (cardList) { cardList.destroy(); cardList = null; }
     await cards.load(collectionId);
     render();
   }

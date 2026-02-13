@@ -128,7 +128,7 @@ export function createCardListItem(container, { card, onEdit, onDelete }) {
   return {
     destroy() {
       window.removeEventListener('click', handleOutsideClick);
-      if (thumbnailUrl) URL.revokeObjectURL(thumbnailUrl);
+      if (thumbnailUrl) { URL.revokeObjectURL(thumbnailUrl); debugLog.add(`[IMG] revoked thumbnail (destroy) card ${card.id}`); }
       el.remove();
     },
     update(newCard) {
