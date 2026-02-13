@@ -3,6 +3,7 @@
  */
 
 import { formatRelativeTime, truncateText } from '../../utils/helpers.js';
+import { debugLog } from '../../utils/debugLog.js';
 
 export function createCardListItem(container, { card, onEdit, onDelete }) {
   let menuOpen = false;
@@ -13,9 +14,13 @@ export function createCardListItem(container, { card, onEdit, onDelete }) {
   let thumbnailUrl = null;
 
   function syncThumbnail() {
-    if (thumbnailUrl) URL.revokeObjectURL(thumbnailUrl);
-    thumbnailUrl = (card.imageBlob instanceof Blob && card.imageBlob.size > 0)
-      ? URL.createObjectURL(card.imageBlob) : null;
+    if (thumbnailUrl) { URL.revokeObjectURL(thumbnailUrl); debugLog.add(`[IMG] revoked thumbnail for card ${card.id}`); }
+    if (card.imageBlob instanceof Blob && card.imageBlob.size > 0) {
+      thumbnailUrl = URL.createObjectURL(card.imageBlob);
+      debugLog.add(`[IMG] created thumbnail for card ${card.id} (${card.imageBlob.size}B ${card.imageBlob.type})`);
+    } else {
+      thumbnailUrl = null;
+    }
   }
 
   syncThumbnail();
@@ -82,6 +87,11 @@ export function createCardListItem(container, { card, onEdit, onDelete }) {
         </div>
       </div>
     `;
+    const thumbImg = el.querySelector('.card-item__thumb');
+    if (thumbImg) {
+      thumbImg.addEventListener('load',  () => debugLog.add(`[IMG] thumbnail loaded card ${card.id}`));
+      thumbImg.addEventListener('error', () => debugLog.add(`[IMG] thumbnail error card ${card.id} src=${thumbImg.src}`));
+    }
     bindEvents();
   }
 

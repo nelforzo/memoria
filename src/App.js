@@ -11,6 +11,7 @@ import { createCollectionDetail } from './lib/components/CollectionDetail.js';
 import { createConfirmDialog } from './lib/components/ConfirmDialog.js';
 import { createNotification } from './lib/components/Notification.js';
 import { createSettings } from './lib/components/Settings.js';
+import { debugLog } from './lib/utils/debugLog.js';
 
 export function createApp(target) {
   let dbReady = false;
@@ -34,6 +35,7 @@ export function createApp(target) {
   const editor = createCollectionEditor(target);
 
   let deletingCollection = null;
+  let debugPanelEl = null;
 
   async function init() {
     logBrowserSupport();
@@ -101,7 +103,7 @@ export function createApp(target) {
         <div class="flex items-center justify-between">
           <div class="min-w-0">
             <h1 class="truncate" style="color:var(--gray-900)">メモリア</h1>
-            <p style="font-size:var(--text-sm);color:var(--gray-600)">😊</p>
+            <p style="font-size:var(--text-sm);color:var(--gray-600);cursor:pointer;user-select:none" data-action="debug" title="デバッグログを表示">😊</p>
           </div>
           <div class="flex items-center gap-2 flex-shrink-0">
             <button class="btn btn--ghost" data-action="settings" aria-label="設定">
@@ -147,6 +149,7 @@ export function createApp(target) {
     // Bind header buttons
     header.querySelector('[data-action="settings"]')?.addEventListener('click', navigateToSettings);
     header.querySelector('[data-action="create"]')?.addEventListener('click', openCreateDialog);
+    header.querySelector('[data-action="debug"]')?.addEventListener('click', openDebugPanel);
   }
 
   function destroyViews() {
@@ -220,6 +223,54 @@ export function createApp(target) {
         } catch { notify.show('コレクションの削除に失敗しました', 'error'); }
       },
       onCancel: () => { deletingCollection = null; }
+    });
+  }
+
+  function openDebugPanel() {
+    if (debugPanelEl) { debugPanelEl.remove(); debugPanelEl = null; return; }
+
+    const panel = document.createElement('div');
+    panel.className = 'debug-panel';
+    panel.innerHTML = `
+      <div class="debug-panel__inner">
+        <div class="debug-panel__toolbar">
+          <span class="debug-panel__title">デバッグログ</span>
+          <div class="flex items-center gap-2">
+            <button class="btn btn--ghost" style="font-size:var(--text-sm);padding:var(--sp-1) var(--sp-3)" data-action="clear">クリア</button>
+            <button class="btn btn--primary" style="font-size:var(--text-sm);padding:var(--sp-1) var(--sp-3)" data-action="copy">コピー</button>
+            <button class="btn btn--icon btn--ghost" style="padding:var(--sp-1)" data-action="close" aria-label="閉じる">
+              <svg style="width:1.25rem;height:1.25rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+        </div>
+        <pre class="debug-panel__log" id="debug-log-pre"></pre>
+        <div class="debug-panel__status" id="debug-copy-status"></div>
+      </div>
+    `;
+    target.appendChild(panel);
+    debugPanelEl = panel;
+
+    function refreshLog() {
+      const pre = panel.querySelector('#debug-log-pre');
+      const entries = debugLog.getAll();
+      pre.textContent = entries.length ? entries.join('\n') : '（まだログはありません）';
+      pre.scrollTop = pre.scrollHeight;
+    }
+    refreshLog();
+
+    panel.querySelector('[data-action="close"]').addEventListener('click', () => {
+      panel.remove(); debugPanelEl = null;
+    });
+    panel.querySelector('[data-action="clear"]').addEventListener('click', () => {
+      debugLog.clear(); refreshLog();
+    });
+    panel.querySelector('[data-action="copy"]').addEventListener('click', () => {
+      const text = debugLog.getText() || '（ログなし）';
+      navigator.clipboard.writeText(text).then(() => {
+        const status = panel.querySelector('#debug-copy-status');
+        status.textContent = 'コピーしました！';
+        setTimeout(() => { status.textContent = ''; }, 2000);
+      }).catch(() => {});
     });
   }
 

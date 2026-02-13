@@ -9,6 +9,7 @@
 
 import { cards } from '../../stores/cards.js';
 import { resetViewport } from '../../utils/viewportReset.js';
+import { debugLog } from '../../utils/debugLog.js';
 
 export function createStudyMode(container, { collectionId, collectionName, onExit }) {
   const el = document.createElement('div');
@@ -27,9 +28,13 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
 
   // Stable audio element — created once, never destroyed until unmount
   const audio = document.createElement('audio');
-  audio.addEventListener('play', () => { isPlaying = true; updateAudioBtn(); });
-  audio.addEventListener('pause', () => { isPlaying = false; updateAudioBtn(); });
-  audio.addEventListener('ended', () => { isPlaying = false; updateAudioBtn(); });
+  audio.addEventListener('play',    () => { isPlaying = true;  updateAudioBtn(); debugLog.add('[AUDIO] play'); });
+  audio.addEventListener('pause',   () => { isPlaying = false; updateAudioBtn(); debugLog.add('[AUDIO] pause'); });
+  audio.addEventListener('ended',   () => { isPlaying = false; updateAudioBtn(); debugLog.add('[AUDIO] ended'); });
+  audio.addEventListener('error',   () => { debugLog.add(`[AUDIO] error code=${audio.error?.code} msg=${audio.error?.message ?? '—'} src=${audio.src}`); });
+  audio.addEventListener('stalled', () => { debugLog.add(`[AUDIO] stalled src=${audio.src}`); });
+  audio.addEventListener('waiting', () => { debugLog.add(`[AUDIO] waiting src=${audio.src}`); });
+  audio.addEventListener('canplay', () => { debugLog.add('[AUDIO] canplay'); });
 
   // Touch state
   let touchStartX = 0;
@@ -47,13 +52,21 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
       let imageUrl = null;
       let audioUrl = null;
       try {
-        if (card.imageBlob instanceof Blob && card.imageBlob.size > 0)
+        if (card.imageBlob instanceof Blob && card.imageBlob.size > 0) {
           imageUrl = URL.createObjectURL(card.imageBlob);
-      } catch (e) { console.warn('Failed to create image URL', e); }
+          debugLog.add(`[IMG] created URL for card ${card.id} (${card.imageBlob.size}B ${card.imageBlob.type})`);
+        } else {
+          debugLog.add(`[IMG] no imageBlob for card ${card.id} (blob=${card.imageBlob}, type=${card.imageBlob?.constructor?.name})`);
+        }
+      } catch (e) { console.warn('Failed to create image URL', e); debugLog.add(`[IMG] createObjectURL failed: ${e}`); }
       try {
-        if (card.audioBlob instanceof Blob && card.audioBlob.size > 0)
+        if (card.audioBlob instanceof Blob && card.audioBlob.size > 0) {
           audioUrl = URL.createObjectURL(card.audioBlob);
-      } catch (e) { console.warn('Failed to create audio URL', e); }
+          debugLog.add(`[AUDIO] created URL for card ${card.id} (${card.audioBlob.size}B ${card.audioBlob.type})`);
+        } else {
+          debugLog.add(`[AUDIO] no audioBlob for card ${card.id} (blob=${card.audioBlob}, type=${card.audioBlob?.constructor?.name})`);
+        }
+      } catch (e) { console.warn('Failed to create audio URL', e); debugLog.add(`[AUDIO] createObjectURL failed: ${e}`); }
       urlCache.set(card.id, { imageUrl, audioUrl });
     }
     return urlCache.get(card.id);
@@ -63,16 +76,20 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
     audio.pause();
     isPlaying = false;
     if (url) {
+      debugLog.add(`[AUDIO] loadAudio src=${url}`);
       audio.src = url;
       audio.load();
+    } else {
+      debugLog.add('[AUDIO] loadAudio skipped (no url)');
     }
   }
 
   function playAudio() {
     const { audioUrl } = ensureUrls(currentCard());
-    if (!audio || !audioUrl) return;
+    if (!audio || !audioUrl) { debugLog.add('[AUDIO] playAudio: no audio or no URL'); return; }
+    debugLog.add(`[AUDIO] playAudio called src=${audio.src} readyState=${audio.readyState}`);
     audio.currentTime = 0;
-    audio.play().catch(() => {});
+    audio.play().catch(e => { debugLog.add(`[AUDIO] play() rejected: ${e}`); });
   }
 
   function markViewed(card) {
@@ -185,6 +202,13 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
     // Re-append stable audio element
     el.appendChild(audio);
 
+    // Log image load/error
+    const imgEl = el.querySelector('.study-card__image');
+    if (imgEl) {
+      imgEl.addEventListener('load',  () => debugLog.add(`[IMG] loaded in StudyMode src=${imgEl.src}`));
+      imgEl.addEventListener('error', () => debugLog.add(`[IMG] error in StudyMode src=${imgEl.src}`));
+    }
+
     bindEvents();
   }
 
@@ -269,9 +293,9 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
       window.removeEventListener('keydown', handleKeydown);
       audio.pause();
       audio.removeAttribute('src');
-      for (const { imageUrl, audioUrl } of urlCache.values()) {
-        if (imageUrl) URL.revokeObjectURL(imageUrl);
-        if (audioUrl) URL.revokeObjectURL(audioUrl);
+      for (const [cardId, { imageUrl, audioUrl }] of urlCache.entries()) {
+        if (imageUrl) { URL.revokeObjectURL(imageUrl); debugLog.add(`[IMG] revoked URL for card ${cardId}`); }
+        if (audioUrl) { URL.revokeObjectURL(audioUrl); debugLog.add(`[AUDIO] revoked URL for card ${cardId}`); }
       }
       urlCache.clear();
       resetViewport();
