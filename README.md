@@ -73,12 +73,12 @@ A progressive web app for multimedia flashcard memorization. Create collections 
 
 ## Tech Stack
 
-| Technology | Version | Purpose |
-|---|---|---|
-| [Svelte](https://svelte.dev) | 5 | Reactive UI components |
-| [Vite](https://vite.dev) | 7 | Build tool and dev server |
-| [Dexie.js](https://dexie.org) | 4 | IndexedDB wrapper for local storage |
-| [Tailwind CSS](https://tailwindcss.com) | 3 | Utility-first styling |
+| Technology | Purpose |
+|---|---|
+| Vanilla JS | UI components (no framework) |
+| [Vite](https://vite.dev) 7 | Build tool and dev server |
+| [Dexie.js](https://dexie.org) 4 | IndexedDB wrapper for local storage |
+| CSS custom properties | Design system and styling |
 
 ### Browser APIs used
 - **IndexedDB** (via Dexie.js) — stores all collections, cards, and binary media
@@ -137,46 +137,43 @@ All data is stored in a local IndexedDB database named `MemoriaDB`.
 
 ```
 memoria/
-├── public/
-│   └── vite.svg
 ├── src/
-│   ├── App.svelte                  # Root component, routing
-│   ├── app.css                     # Global styles
-│   ├── main.js                     # Entry point
+│   ├── main.js                           # Entry point
+│   ├── App.js                            # Root component, routing
+│   ├── styles.css                        # All CSS (reset, tokens, components)
 │   └── lib/
 │       ├── components/
 │       │   ├── Collection/
-│       │   │   ├── CollectionCard.svelte    # Collection list item
-│       │   │   ├── CollectionEditor.svelte  # Create/edit modal
-│       │   │   └── CollectionList.svelte    # Home screen grid
+│       │   │   ├── CollectionCard.js     # Collection list item
+│       │   │   ├── CollectionEditor.js   # Create/edit modal
+│       │   │   └── CollectionList.js     # Home screen grid
 │       │   ├── Card/
-│       │   │   ├── CardEditor.svelte        # Create/edit modal
-│       │   │   ├── CardList.svelte          # Cards grid
-│       │   │   └── CardListItem.svelte      # Card list item with thumbnail
+│       │   │   ├── CardEditor.js         # Create/edit modal
+│       │   │   ├── CardList.js           # Cards list
+│       │   │   └── CardListItem.js       # Card list item with thumbnail
 │       │   ├── Media/
-│       │   │   ├── AudioRecorder.svelte     # Record, preview, remove audio
-│       │   │   └── ImageCapture.svelte      # Upload or capture photo
+│       │   │   ├── AudioRecorder.js      # Record, preview, remove audio
+│       │   │   └── ImageCapture.js       # Upload or capture photo
 │       │   ├── Study/
-│       │   │   └── StudyMode.svelte         # Full-screen study interface
-│       │   ├── CollectionDetail.svelte      # Collection page (cards + header)
-│       │   ├── ConfirmDialog.svelte         # Reusable confirmation modal
-│       │   └── Settings.svelte              # Export/import UI
+│       │   │   └── StudyMode.js          # Full-screen study interface
+│       │   ├── CollectionDetail.js       # Collection page (cards + header)
+│       │   ├── ConfirmDialog.js          # Reusable confirmation modal
+│       │   ├── Notification.js           # Toast notification
+│       │   └── Settings.js              # Export/import UI
 │       ├── database/
-│       │   └── db.js                        # Dexie schema, models, helpers
+│       │   └── db.js                     # Dexie schema, models, helpers
 │       ├── stores/
-│       │   ├── collections.js               # Reactive collections store
-│       │   └── cards.js                     # Reactive cards store
+│       │   ├── collections.js            # Observable collections store
+│       │   └── cards.js                  # Observable cards store
 │       └── utils/
-│           ├── audioRecording.js            # AudioRecorder class, formatDuration
-│           ├── exportImport.js              # Export/import with base64 blobs
-│           ├── helpers.js                   # UUID, timestamps, formatting
-│           └── imageCompression.js          # Canvas-based image compression
+│           ├── audioRecording.js         # AudioRecorder class, formatDuration
+│           ├── exportImport.js           # Export/import with base64 blobs
+│           ├── helpers.js                # UUID, timestamps, formatting
+│           ├── imageCompression.js       # Canvas-based image compression
+│           └── viewportReset.js          # Safari iOS viewport fix
 ├── index.html
 ├── package.json
-├── vite.config.js                           # base: '/memoria/' for GitHub Pages
-├── svelte.config.js
-├── tailwind.config.js
-└── postcss.config.js
+└── vite.config.js                        # base: '/memoria/' for GitHub Pages
 ```
 
 ---
