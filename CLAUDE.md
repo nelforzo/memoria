@@ -6,7 +6,7 @@ Quick reference for working on this project. Full details in `docs/`.
 
 ## Project
 
-Svelte 5 + Vite 7 + Dexie.js + Tailwind CSS v3 PWA for offline multimedia flashcard memorization. All data lives in IndexedDB — no backend, no auth.
+Vanilla JS + Vite 7 + Dexie.js + CSS PWA for offline multimedia flashcard memorization. All data lives in IndexedDB — no backend, no auth.
 
 See `README.md` for full feature list and architecture.
 
@@ -41,35 +41,45 @@ Short version:
 ## Key architectural decisions
 
 - `base: '/memoria/'` in `vite.config.js` — required for GitHub Pages subdirectory serving
-- Tailwind CSS v3 (not v4) — v4 had breaking incompatibilities at project start
-- `<audio>` element kept outside Svelte `{#key}` blocks — Safari requires a stable DOM node for reliable media loading; use `bind:this` + imperative `load()` calls
-- Blob URLs cached in a `Map<cardId, urls>` per session — created once, revoked in `onDestroy`
+- Vanilla JS components using a `createXxx(container, props)` factory pattern returning `{ destroy(), update() }`
+- Single `src/styles.css` with CSS custom properties for design tokens — no framework, no preprocessor
+- Stores use a plain JS observable pattern: `{ subscribe(fn), get(), set(), update() }` (no Svelte)
+- `<audio>` element created once at mount time in StudyMode — src set imperatively via `audio.src = url; audio.load()`, eliminating the Svelte timing bug where `bind:this` was undefined during reactive chain execution
+- Blob URLs cached in a `Map<cardId, urls>` per session — created once, revoked on destroy
 - `viewportReset.js` must be `await`ed **before** removing fixed overlays — locks viewport scale, waits rAF + 100ms, then restores; prevents Safari iOS zoom bug
 
 ---
 
 ## Coding conventions
 
-- Svelte 4 legacy syntax (`$:` reactive declarations, `export let`, `on:event`)
 - No TypeScript — plain JS throughout
-- Tailwind utility classes only; component-scoped `<style>` only for things Tailwind can't do (e.g. `@keyframes`, media query variants)
-- Minimum tap target: 56px (`w-14 h-14`) on touch-interactive elements
+- No framework — vanilla JS with imperative DOM manipulation
+- CSS custom properties for design tokens; component-scoped styles in `src/styles.css`
+- Minimum tap target: 44px on touch-interactive elements
+- Component pattern: `export function createXxx(container, props) { ... return { destroy(), update() }; }`
+- Use `data-action="xxx"` attributes for event delegation
+- HTML escaping via `escapeHtml()` helper for user content
 
 ---
 
 ## Repo structure
 
 ```
-src/lib/
-  components/
-    Card/          # CardEditor, CardList, CardListItem
-    Collection/    # CollectionCard, CollectionEditor, CollectionList
-    Media/         # AudioRecorder, ImageCapture
-    Study/         # StudyMode
-    CollectionDetail.svelte
-    ConfirmDialog.svelte
-    Settings.svelte
-  database/db.js   # Dexie schema
-  stores/          # collections.js, cards.js
-  utils/           # exportImport, helpers, imageCompression, audioRecording, viewportReset
+src/
+  main.js              # Entry point
+  App.js               # Root component (routing, header)
+  styles.css           # All CSS (reset, tokens, components)
+  lib/
+    components/
+      Card/            # CardEditor, CardList, CardListItem
+      Collection/      # CollectionCard, CollectionEditor, CollectionList
+      Media/           # AudioRecorder, ImageCapture
+      Study/           # StudyMode
+      CollectionDetail.js
+      ConfirmDialog.js
+      Notification.js
+      Settings.js
+    database/db.js     # Dexie schema
+    stores/            # collections.js, cards.js (plain JS observable)
+    utils/             # exportImport, helpers, imageCompression, audioRecording, viewportReset
 ```

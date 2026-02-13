@@ -5,18 +5,37 @@
  * Syncs with IndexedDB database via Dexie.js.
  */
 
-import { writable } from 'svelte/store';
 import { db, Card } from '../database/db.js';
 import { collections } from './collections.js';
+
+/**
+ * Simple observable store (replaces Svelte writable)
+ */
+function createStore(initial) {
+  let value = initial;
+  const listeners = new Set();
+
+  return {
+    get()       { return value; },
+    set(v)      { value = v; listeners.forEach(fn => fn(value)); },
+    update(fn)  { value = fn(value); listeners.forEach(fn2 => fn2(value)); },
+    subscribe(fn) {
+      listeners.add(fn);
+      fn(value); // immediate call with current value
+      return () => listeners.delete(fn);
+    }
+  };
+}
 
 /**
  * Cards store - holds array of cards for current collection
  */
 function createCardsStore() {
-  const { subscribe, set, update } = writable([]);
+  const store = createStore([]);
 
   return {
-    subscribe,
+    subscribe: store.subscribe,
+    get: store.get,
 
     /**
      * Load all cards for a specific collection
@@ -33,12 +52,12 @@ function createCardsStore() {
         // Reverse to show newest first
         cards.reverse();
 
-        set(cards);
+        store.set(cards);
         console.log('📇 Loaded', cards.length, 'cards for collection', collectionId);
         return cards;
       } catch (error) {
         console.error('Failed to load cards:', error);
-        set([]);
+        store.set([]);
         throw error;
       }
     },
@@ -61,7 +80,7 @@ function createCardsStore() {
         await db.cards.add(card);
 
         // Add to store (prepend to show newest first)
-        update(cards => [card, ...cards]);
+        store.update(cards => [card, ...cards]);
 
         // Update collection card count
         await updateCollectionCardCount(collectionId);
@@ -85,7 +104,7 @@ function createCardsStore() {
         await db.cards.update(id, updates);
 
         // Update in store
-        update(cards =>
+        store.update(cards =>
           cards.map(card =>
             card.id === id
               ? { ...card, ...updates }
@@ -111,7 +130,7 @@ function createCardsStore() {
         await db.cards.delete(id);
 
         // Remove from store
-        update(cards => cards.filter(card => card.id !== id));
+        store.update(cards => cards.filter(card => card.id !== id));
 
         // Update collection card count
         await updateCollectionCardCount(collectionId);
@@ -154,7 +173,7 @@ function createCardsStore() {
         });
 
         // Update in store
-        update(cards =>
+        store.update(cards =>
           cards.map(c =>
             c.id === id
               ? {
@@ -177,7 +196,7 @@ function createCardsStore() {
      * Clear all cards from store (doesn't affect database)
      */
     clear() {
-      set([]);
+      store.set([]);
     }
   };
 }

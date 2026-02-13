@@ -5,17 +5,36 @@
  * Syncs with IndexedDB database via Dexie.js.
  */
 
-import { writable } from 'svelte/store';
 import { db, Collection } from '../database/db.js';
+
+/**
+ * Simple observable store (replaces Svelte writable)
+ */
+function createStore(initial) {
+  let value = initial;
+  const listeners = new Set();
+
+  return {
+    get()       { return value; },
+    set(v)      { value = v; listeners.forEach(fn => fn(value)); },
+    update(fn)  { value = fn(value); listeners.forEach(fn2 => fn2(value)); },
+    subscribe(fn) {
+      listeners.add(fn);
+      fn(value); // immediate call with current value
+      return () => listeners.delete(fn);
+    }
+  };
+}
 
 /**
  * Collections store - holds array of all collections
  */
 function createCollectionsStore() {
-  const { subscribe, set, update } = writable([]);
+  const store = createStore([]);
 
   return {
-    subscribe,
+    subscribe: store.subscribe,
+    get: store.get,
 
     /**
      * Load all collections from database
@@ -27,12 +46,12 @@ function createCollectionsStore() {
           .reverse()
           .toArray();
 
-        set(collections);
+        store.set(collections);
         console.log('📚 Loaded', collections.length, 'collections');
         return collections;
       } catch (error) {
         console.error('Failed to load collections:', error);
-        set([]);
+        store.set([]);
         throw error;
       }
     },
@@ -52,7 +71,7 @@ function createCollectionsStore() {
         await db.collections.add(collection);
 
         // Add to store
-        update(collections => [collection, ...collections]);
+        store.update(collections => [collection, ...collections]);
 
         console.log('✅ Created collection:', collection.name);
         return collection;
@@ -78,7 +97,7 @@ function createCollectionsStore() {
         await db.collections.update(id, updatedData);
 
         // Update in store
-        update(collections =>
+        store.update(collections =>
           collections.map(col =>
             col.id === id
               ? { ...col, ...updatedData }
@@ -107,7 +126,7 @@ function createCollectionsStore() {
         await db.cards.where('collectionId').equals(id).delete();
 
         // Remove from store
-        update(collections =>
+        store.update(collections =>
           collections.filter(col => col.id !== id)
         );
 
@@ -146,7 +165,7 @@ function createCollectionsStore() {
         });
 
         // Update in store
-        update(collections =>
+        store.update(collections =>
           collections.map(col =>
             col.id === id
               ? { ...col, cardCount: count, updatedAt: Date.now() }
@@ -165,7 +184,7 @@ function createCollectionsStore() {
     async clear() {
       await db.collections.clear();
       await db.cards.clear();
-      set([]);
+      store.set([]);
       console.log('🗑️ Cleared all collections');
     }
   };
