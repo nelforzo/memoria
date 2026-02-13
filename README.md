@@ -203,29 +203,11 @@ Open http://localhost:5173/
 ```bash
 npm run build
 ```
-Output is in `dist/`. The `base` in `vite.config.js` is set to `/memoria/` for the GitHub Pages deployment. If deploying to a domain root, change it to `'/'`.
+Output is in `dist/`. The app is a static site — no server required. Copy `dist/` to any static host.
 
 ### Preview production build
 ```bash
 npm run preview
-```
-
----
-
-## Deployment
-
-The app is a static site — no server required. After `npm run build`, copy the `dist/` folder to any static host.
-
-### GitHub Pages (current deployment)
-The built files are served from the `memoria/` subdirectory of [nelforzo.github.io](https://github.com/nelforzo/nelforzo.github.io). To update:
-
-```bash
-npm run build
-cp -r dist/* ../nelforzo.github.io/memoria/
-cd ../nelforzo.github.io
-git add memoria/
-git commit -m "Update Memoria"
-git push
 ```
 
 ---
