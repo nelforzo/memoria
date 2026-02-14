@@ -22,7 +22,7 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
   container.appendChild(el);
 
   // State
-  let studyCards = [...cards.get()];
+  let studyCards = [...cards.get()].reverse();
   let currentIndex = 0;
   let showFront = true;
   let viewedCards = new Set();
