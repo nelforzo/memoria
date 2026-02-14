@@ -26,7 +26,6 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
   let currentIndex = 0;
   let showFront = true;
   let viewedCards = new Set();
-  let isPlaying = false;
   let audioUnsupported = false;
   let destroyed = false;
 
@@ -44,12 +43,12 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
 
   // Stable audio element — created once, never destroyed until unmount
   const audio = document.createElement('audio');
-  audio.addEventListener('play',    () => { isPlaying = true;  updateAudioBtn(); debugLog.add('[AUDIO] play'); });
-  audio.addEventListener('pause',   () => { isPlaying = false; updateAudioBtn(); debugLog.add('[AUDIO] pause'); });
-  audio.addEventListener('ended',   () => { isPlaying = false; updateAudioBtn(); debugLog.add('[AUDIO] ended'); });
+  audio.addEventListener('play',    () => { debugLog.add('[AUDIO] play'); });
+  audio.addEventListener('pause',   () => { debugLog.add('[AUDIO] pause'); });
+  audio.addEventListener('ended',   () => { debugLog.add('[AUDIO] ended'); });
   audio.addEventListener('error',   () => {
     debugLog.add(`[AUDIO] error code=${audio.error?.code} msg=${audio.error?.message ?? '—'} src=${audio.src.slice(0, 60)}`);
-    if (audio.error?.code === 4) { audioUnsupported = true; updateAudioBtn(); }
+    if (audio.error?.code === 4) { audioUnsupported = true; render(); }
   });
   audio.addEventListener('stalled', () => { debugLog.add(`[AUDIO] stalled`); });
   audio.addEventListener('waiting', () => { debugLog.add(`[AUDIO] waiting`); });
@@ -114,7 +113,6 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
 
   function loadAudio(url) {
     audio.pause();
-    isPlaying = false;
     audioUnsupported = false;
     if (url) {
       debugLog.add(`[AUDIO] loadAudio src=${url.slice(0, 60)}`);
@@ -201,20 +199,17 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
                         クリックまたはスペースキーで質問に戻る
                       </div>
                     `}
+                    ${audioUrl ? audioIndicatorHtml() : ''}
                   </div>
                 ` : `
                   <div style="text-align:center;width:100%">
-                    <p class="study-card__text">${escapeHtml(card.text)}</p>
+                    ${card.text ? `<p class="study-card__text">${escapeHtml(card.text)}</p>` : ''}
+                    ${audioUrl ? audioIndicatorHtml() : ''}
                   </div>
                 `}
               </div>
               <div class="study-card__badge">カード ${currentIndex + 1}</div>
             </div>
-            ${audioUrl ? `
-              <div style="margin-top:var(--sp-6);display:flex;justify-content:center">
-                ${audioButtonHtml()}
-              </div>
-            ` : ''}
           ` : `
             <div style="text-align:center;color:white">
               <p style="font-size:var(--text-xl)">学習するカードがありません</p>
@@ -250,29 +245,17 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
     bindEvents();
   }
 
-  function audioButtonHtml() {
+  function audioIndicatorHtml() {
     if (audioUnsupported) {
-      return `<button class="study-audio-btn study-audio-btn--unsupported" data-action="play-audio" aria-label="このブラウザでは再生できません" title="このオーディオ形式はお使いのブラウザでサポートされていません">
-        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.63 3.63a.996.996 0 000 1.41L7.29 8.7 7 9H4a1 1 0 00-1 1v4a1 1 0 001 1h3l3.29 3.29c.63.63 1.71.18 1.71-.71v-4.17l4.18 4.18c-.49.37-1.02.68-1.6.91a.998.998 0 00.67 1.87c.87-.31 1.66-.77 2.36-1.34l1.58 1.58a.996.996 0 101.41-1.41L5.05 3.63c-.39-.39-1.02-.39-1.42 0zM19 12c0 .82-.15 1.61-.41 2.34l1.53 1.53c.56-1.17.88-2.48.88-3.87 0-3.83-2.4-7.11-5.78-8.4a.99.99 0 00-1.33.94v.21c0 .46.31.86.75 1.02C16.69 6.54 19 9.06 19 12zm-8.71-6.29l-.17.17L12 7.76V6.41c0-.89-1.08-1.33-1.71-.7zM16.5 12A4.5 4.5 0 0014 7.97v1.79l2.48 2.48c.01-.08.02-.16.02-.24z"/></svg>
-      </button>`;
+      return `<div class="study-card__hint study-card__hint--audio study-card__hint--muted" aria-label="このブラウザでは再生できません">
+        <svg style="width:1.1rem;height:1.1rem;display:inline-block;margin-right:var(--sp-1);vertical-align:middle" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.63 3.63a.996.996 0 000 1.41L7.29 8.7 7 9H4a1 1 0 00-1 1v4a1 1 0 001 1h3l3.29 3.29c.63.63 1.71.18 1.71-.71v-4.17l4.18 4.18c-.49.37-1.02.68-1.6.91a.998.998 0 00.67 1.87c.87-.31 1.66-.77 2.36-1.34l1.58 1.58a.996.996 0 101.41-1.41L5.05 3.63c-.39-.39-1.02-.39-1.42 0zM19 12c0 .82-.15 1.61-.41 2.34l1.53 1.53c.56-1.17.88-2.48.88-3.87 0-3.83-2.4-7.11-5.78-8.4a.99.99 0 00-1.33.94v.21c0 .46.31.86.75 1.02C16.69 6.54 19 9.06 19 12zm-8.71-6.29l-.17.17L12 7.76V6.41c0-.89-1.08-1.33-1.71-.7zM16.5 12A4.5 4.5 0 0014 7.97v1.79l2.48 2.48c.01-.08.02-.16.02-.24z"/></svg>
+        音声を再生できません
+      </div>`;
     }
-    return `<button class="study-audio-btn" data-action="play-audio" aria-label="${isPlaying ? '音声を停止' : '音声を再生'}">
-      ${isPlaying ? `<span class="study-audio-btn__ping" aria-hidden="true"></span>` : ''}
-      ${isPlaying
-        ? `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>`
-        : `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>`
-      }
-    </button>`;
-  }
-
-  function updateAudioBtn() {
-    const wrap = el.querySelector('[data-action="play-audio"]')?.parentElement;
-    if (!wrap) return;
-    wrap.innerHTML = audioButtonHtml();
-    wrap.querySelector('[data-action="play-audio"]')?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (!audioUnsupported) playAudio();
-    });
+    return `<div class="study-card__hint study-card__hint--audio" aria-hidden="true">
+      <svg style="width:1.1rem;height:1.1rem;display:inline-block;margin-right:var(--sp-1);vertical-align:middle" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z"/></svg>
+      タップで音声を再生
+    </div>`;
   }
 
   function bindEvents() {
@@ -280,10 +263,6 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
     el.querySelector('[data-action="flip"]')?.addEventListener('click', toggleFlip);
     el.querySelector('[data-action="flip"]')?.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') toggleFlip();
-    });
-    el.querySelector('[data-action="play-audio"]')?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (!audioUnsupported) playAudio();
     });
 
     // Touch swipe — uses canNavigate() to prevent the iOS phantom-touch loop
@@ -318,6 +297,7 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
   function toggleFlip() {
     showFront = !showFront;
     render();
+    if (!audioUnsupported) playAudio();
   }
 
   function goToPrevious() {

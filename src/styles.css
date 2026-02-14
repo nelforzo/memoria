@@ -1029,6 +1029,8 @@ textarea { resize: vertical; }
 
 .study-card__hint--indigo { color: var(--indigo-600); }
 .study-card__hint--green { color: var(--green-600); }
+.study-card__hint--audio { color: var(--gray-400); margin-top: var(--sp-6); }
+.study-card__hint--muted { color: var(--gray-500); }
 
 .study-card__image {
   max-width: 100%;
@@ -1039,37 +1041,6 @@ textarea { resize: vertical; }
   object-fit: contain;
 }
 
-.study-audio-btn {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: var(--radius-full);
-  background: var(--indigo-500);
-  color: white;
-  box-shadow: var(--shadow-lg);
-  transition: background-color 0.15s;
-  cursor: pointer;
-  border: none;
-}
-
-.study-audio-btn:hover { background: var(--indigo-400); }
-.study-audio-btn:active { background: var(--indigo-600); }
-.study-audio-btn--unsupported { background: var(--gray-600); cursor: not-allowed; opacity: 0.7; }
-.study-audio-btn--unsupported:hover { background: var(--gray-600); }
-
-.study-audio-btn svg { width: 1.5rem; height: 1.5rem; position: relative; z-index: 1; }
-
-.study-audio-btn__ping {
-  position: absolute;
-  inset: 0;
-  border-radius: var(--radius-full);
-  background: var(--indigo-400);
-  opacity: 0.75;
-  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
 
 .study-hints {
   padding: var(--sp-3) 0;

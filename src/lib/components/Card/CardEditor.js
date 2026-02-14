@@ -61,7 +61,7 @@ export function createCardEditor(parent) {
             <div data-error-general></div>
 
             <div class="form-field--lg">
-              <label class="form-label" for="card-text">カードの内容 <span class="form-label__required">*</span></label>
+              <label class="form-label" for="card-text">カードの内容 <span class="form-label__optional">（写真がある場合は任意）</span></label>
               <textarea id="card-text" maxlength="5000" rows="10" placeholder="カードの内容を入力（例：1行目に質問、2行目に答え）&#10;&#10;例：&#10;フランスの首都はどこですか？&#10;パリ" style="font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;padding:var(--sp-3) var(--sp-4)" data-input="text">${escapeHtml(text)}</textarea>
               <div class="flex justify-between" style="margin-top:var(--sp-1)">
                 <p class="form-hint" data-text-hint>💡 ヒント：複数行を使って質問と答えを分けることができます</p>
@@ -114,10 +114,10 @@ export function createCardEditor(parent) {
       e.preventDefault();
       const textVal = textInput.value.trim();
 
-      if (!textVal) {
+      if (!textVal && !imageBlob) {
         textInput.classList.add('input-error');
         const hint = el.querySelector('[data-text-hint]');
-        hint.textContent = 'カードのテキストは必須です';
+        hint.textContent = 'テキストまたは写真のいずれかが必要です';
         hint.classList.remove('form-hint');
         hint.classList.add('form-error');
         return;
