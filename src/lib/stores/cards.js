@@ -7,6 +7,7 @@
 
 import { db, Card } from '../database/db.js';
 import { collections } from './collections.js';
+import { saveMedia, deleteMedia, deleteAllCardMedia } from '../utils/mediaCache.js';
 
 /**
  * Simple observable store (replaces Svelte writable)
@@ -70,14 +71,20 @@ function createCardsStore() {
      */
     async create(collectionId, data) {
       try {
+        const { imageBlob, audioBlob, ...rest } = data;
         const card = new Card({
           collectionId,
-          text: data.text,
-          imageBlob: data.imageBlob || null,
-          audioBlob: data.audioBlob || null
+          text: rest.text,
+          hasImage: imageBlob instanceof Blob && imageBlob.size > 0,
+          hasAudio: audioBlob instanceof Blob && audioBlob.size > 0,
+          imageMimeType: (imageBlob instanceof Blob && imageBlob.size > 0) ? imageBlob.type : null,
+          audioMimeType: (audioBlob instanceof Blob && audioBlob.size > 0) ? audioBlob.type : null
         });
 
         await db.cards.add(card);
+
+        if (card.hasImage) await saveMedia(card.id, 'image', imageBlob);
+        if (card.hasAudio) await saveMedia(card.id, 'audio', audioBlob);
 
         // Add to store (prepend to show newest first)
         store.update(cards => [card, ...cards]);
@@ -101,13 +108,37 @@ function createCardsStore() {
      */
     async update(id, updates) {
       try {
-        await db.cards.update(id, updates);
+        const { imageBlob, audioBlob, ...dbUpdates } = updates;
+
+        // Handle image media
+        if (imageBlob === null) {
+          await deleteMedia(id, 'image');
+          dbUpdates.hasImage = false;
+          dbUpdates.imageMimeType = null;
+        } else if (imageBlob instanceof Blob) {
+          await saveMedia(id, 'image', imageBlob);
+          dbUpdates.hasImage = true;
+          dbUpdates.imageMimeType = imageBlob.type;
+        }
+
+        // Handle audio media
+        if (audioBlob === null) {
+          await deleteMedia(id, 'audio');
+          dbUpdates.hasAudio = false;
+          dbUpdates.audioMimeType = null;
+        } else if (audioBlob instanceof Blob) {
+          await saveMedia(id, 'audio', audioBlob);
+          dbUpdates.hasAudio = true;
+          dbUpdates.audioMimeType = audioBlob.type;
+        }
+
+        await db.cards.update(id, dbUpdates);
 
         // Update in store
         store.update(cards =>
           cards.map(card =>
             card.id === id
-              ? { ...card, ...updates }
+              ? { ...card, ...dbUpdates }
               : card
           )
         );
@@ -128,6 +159,7 @@ function createCardsStore() {
     async delete(id, collectionId) {
       try {
         await db.cards.delete(id);
+        await deleteAllCardMedia(id);
 
         // Remove from store
         store.update(cards => cards.filter(card => card.id !== id));

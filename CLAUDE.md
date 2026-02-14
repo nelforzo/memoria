@@ -6,7 +6,7 @@ Quick reference for working on this project. Full details in `docs/`.
 
 ## Project
 
-Vanilla JS + Vite 7 + Dexie.js + CSS PWA for offline multimedia flashcard memorization. All data lives in IndexedDB — no backend, no auth.
+Vanilla JS + Vite 7 + Dexie.js + CSS PWA for offline multimedia flashcard memorization. Card metadata in IndexedDB; media (images, audio) in CacheStorage (`memoria-media-v1`). No backend, no auth.
 
 See `README.md` for full feature list and architecture.
 
@@ -44,8 +44,9 @@ Short version:
 - Vanilla JS components using a `createXxx(container, props)` factory pattern returning `{ destroy(), update() }`
 - Single `src/styles.css` with CSS custom properties for design tokens — no framework, no preprocessor
 - Stores use a plain JS observable pattern: `{ subscribe(fn), get(), set(), update() }` (no Svelte)
-- `<audio>` element created once at mount time in StudyMode — src set imperatively via `audio.src = url; audio.load()`, eliminating the Svelte timing bug where `bind:this` was undefined during reactive chain execution
-- Blob URLs cached in a `Map<cardId, urls>` per session — created once, revoked on destroy
+- Media stored in CacheStorage (`memoria-media-v1`) keyed as `media/card-{id}-image|audio`; card records in IndexedDB hold only `hasImage`/`hasAudio` flags + MIME types
+- `<audio>` element created once at mount time in StudyMode — src set imperatively via `audio.src = url; audio.load()`
+- StudyMode preloads all media from cache before first render: images → data URLs, audio → blob URLs (revoked on destroy)
 - `viewportReset.js` must be `await`ed **before** removing fixed overlays — locks viewport scale, waits rAF + 100ms, then restores; prevents Safari iOS zoom bug
 
 ---
@@ -81,5 +82,5 @@ src/
       Settings.js
     database/db.js     # Dexie schema
     stores/            # collections.js, cards.js (plain JS observable)
-    utils/             # exportImport, helpers, imageCompression, audioRecording, viewportReset
+    utils/             # exportImport, helpers, imageCompression, audioRecording, viewportReset, mediaCache
 ```

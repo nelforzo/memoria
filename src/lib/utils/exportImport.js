@@ -5,6 +5,7 @@
  */
 
 import { db } from '../database/db.js';
+import { saveMedia, deleteMedia, getMedia } from './mediaCache.js';
 
 const EXPORT_VERSION = '1.0';
 
@@ -79,13 +80,17 @@ export async function exportCollection(collectionId) {
 
     console.log(`📦 Exporting collection "${collection.name}" with ${cards.length} cards...`);
 
-    // Convert blobs to base64
+    // Convert media to base64
     const cardsWithBase64 = await Promise.all(
-      cards.map(async (card) => ({
-        ...card,
-        imageBlob: card.imageBlob ? await blobToBase64(card.imageBlob) : null,
-        audioBlob: card.audioBlob ? await blobToBase64(card.audioBlob) : null
-      }))
+      cards.map(async (card) => {
+        const imageBlob = card.hasImage ? await getMedia(card.id, 'image') : null;
+        const audioBlob = card.hasAudio ? await getMedia(card.id, 'audio') : null;
+        return {
+          ...card,
+          imageBlob: imageBlob ? await blobToBase64(imageBlob) : null,
+          audioBlob: audioBlob ? await blobToBase64(audioBlob) : null
+        };
+      })
     );
 
     // Create export data
@@ -136,11 +141,15 @@ export async function exportAllCollections() {
           .toArray();
 
         const cardsWithBase64 = await Promise.all(
-          cards.map(async (card) => ({
-            ...card,
-            imageBlob: card.imageBlob ? await blobToBase64(card.imageBlob) : null,
-            audioBlob: card.audioBlob ? await blobToBase64(card.audioBlob) : null
-          }))
+          cards.map(async (card) => {
+            const imageBlob = card.hasImage ? await getMedia(card.id, 'image') : null;
+            const audioBlob = card.hasAudio ? await getMedia(card.id, 'audio') : null;
+            return {
+              ...card,
+              imageBlob: imageBlob ? await blobToBase64(imageBlob) : null,
+              audioBlob: audioBlob ? await blobToBase64(audioBlob) : null
+            };
+          })
         );
 
         return {
@@ -211,11 +220,13 @@ export async function importCollections(file, strategy = 'merge') {
           console.log(`⏭️ Skipped existing collection: ${collection.name}`);
           continue;
         } else if (strategy === 'replace') {
-          // Delete existing cards
-          await db.cards
-            .where('collectionId')
-            .equals(collection.id)
-            .delete();
+          // Delete existing cards and their media
+          const existingCards = await db.cards.where('collectionId').equals(collection.id).toArray();
+          for (const c of existingCards) {
+            await deleteMedia(c.id, 'image');
+            await deleteMedia(c.id, 'audio');
+          }
+          await db.cards.where('collectionId').equals(collection.id).delete();
           updated++;
           console.log(`🔄 Replaced collection: ${collection.name}`);
         }
@@ -226,16 +237,26 @@ export async function importCollections(file, strategy = 'merge') {
       // Insert/update collection
       await db.collections.put(collectionData);
 
-      // Convert base64 back to blobs and insert cards
+      // Insert cards (metadata only) and save media to cache
       if (cards && Array.isArray(cards)) {
         for (const card of cards) {
-          const cardWithBlobs = {
-            ...card,
-            imageBlob: card.imageBlob ? base64ToBlob(card.imageBlob) : null,
-            audioBlob: card.audioBlob ? base64ToBlob(card.audioBlob) : null
-          };
+          const imageBlob = card.imageBlob ? base64ToBlob(card.imageBlob) : null;
+          const audioBlob = card.audioBlob ? base64ToBlob(card.audioBlob) : null;
 
-          await db.cards.put(cardWithBlobs);
+          const cardData = {
+            ...card,
+            hasImage: imageBlob !== null,
+            hasAudio: audioBlob !== null,
+            imageMimeType: imageBlob?.type || null,
+            audioMimeType: audioBlob?.type || null
+          };
+          delete cardData.imageBlob;
+          delete cardData.audioBlob;
+
+          await db.cards.put(cardData);
+
+          if (imageBlob) await saveMedia(card.id, 'image', imageBlob);
+          if (audioBlob) await saveMedia(card.id, 'audio', audioBlob);
         }
       }
     }

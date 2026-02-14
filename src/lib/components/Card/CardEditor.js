@@ -4,6 +4,7 @@
 
 import { createImageCapture } from '../Media/ImageCapture.js';
 import { createAudioRecorderUI } from '../Media/AudioRecorder.js';
+import { getMedia } from '../../utils/mediaCache.js';
 
 export function createCardEditor(parent) {
   const el = document.createElement('div');
@@ -17,7 +18,7 @@ export function createCardEditor(parent) {
   let imageBlob = null;
   let audioBlob = null;
 
-  function open({ card = null, onCreate, onUpdate }) {
+  async function open({ card = null, onCreate, onUpdate }) {
     _card = card;
     _onCreate = onCreate || null;
     _onUpdate = onUpdate || null;
@@ -26,8 +27,26 @@ export function createCardEditor(parent) {
     const title = isEdit ? 'カードを編集' : '新しいカード';
     const submitLabel = isEdit ? '変更を保存' : 'カードを追加';
     const text = card?.text || '';
-    imageBlob = card?.imageBlob || null;
-    audioBlob = card?.audioBlob || null;
+    imageBlob = null;
+    audioBlob = null;
+
+    // Show loading spinner while fetching media from cache
+    if (isEdit && (card.hasImage || card.hasAudio)) {
+      el.innerHTML = `
+        <div class="modal-backdrop">
+          <div class="modal modal--wide" role="dialog" aria-modal="true" tabindex="-1" style="display:flex;align-items:center;justify-content:center;min-height:200px">
+            <svg class="spinner" style="width:2rem;height:2rem" fill="none" viewBox="0 0 24 24">
+              <circle style="opacity:0.25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path style="opacity:0.75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+          </div>
+        </div>
+      `;
+      [imageBlob, audioBlob] = await Promise.all([
+        card.hasImage ? getMedia(card.id, 'image') : null,
+        card.hasAudio ? getMedia(card.id, 'audio') : null
+      ]);
+    }
 
     el.innerHTML = `
       <div class="modal-backdrop" data-backdrop>

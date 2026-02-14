@@ -4,7 +4,7 @@
 
 import { formatRelativeTime, truncateText } from '../../utils/helpers.js';
 import { blobToDataURL } from '../../utils/imageCompression.js';
-import { db } from '../../database/db.js';
+import { getMedia } from '../../utils/mediaCache.js';
 import { debugLog } from '../../utils/debugLog.js';
 
 export function createCardListItem(container, { card, onEdit, onDelete }) {
@@ -12,42 +12,24 @@ export function createCardListItem(container, { card, onEdit, onDelete }) {
   const el = document.createElement('div');
   container.appendChild(el);
 
-  // Thumbnail — stored as a data URL (base64) to avoid Safari's blob URL
-  // lifetime issues with IndexedDB-sourced Blobs.
   let thumbnailUrl = null;
-  let thumbnailBlobRef = null; // track which blob the data URL was built from
 
   async function syncThumbnail() {
-    if (!(card.imageBlob instanceof Blob) || card.imageBlob.size === 0) {
+    if (!card.hasImage) {
       thumbnailUrl = null;
-      thumbnailBlobRef = null;
       return;
     }
-    // Skip if we already have a data URL for this exact Blob instance
-    if (card.imageBlob === thumbnailBlobRef && thumbnailUrl) return;
     try {
-      thumbnailUrl = await blobToDataURL(card.imageBlob);
-      thumbnailBlobRef = card.imageBlob;
-      debugLog.add(`[IMG] created data URL thumbnail for card ${card.id} (${card.imageBlob.size}B ${card.imageBlob.type})`);
-    } catch (e) {
-      // Safari blob expired — re-fetch fresh from IndexedDB
-      debugLog.add(`[IMG] blobToDataURL failed, re-fetching from DB: ${e}`);
-      try {
-        const fresh = await db.cards.get(card.id);
-        if (fresh?.imageBlob instanceof Blob && fresh.imageBlob.size > 0) {
-          thumbnailUrl = await blobToDataURL(fresh.imageBlob);
-          card = { ...card, imageBlob: fresh.imageBlob };
-          thumbnailBlobRef = card.imageBlob;
-          debugLog.add(`[IMG] re-fetched data URL thumbnail for card ${card.id}`);
-        } else {
-          thumbnailUrl = null;
-          thumbnailBlobRef = null;
-        }
-      } catch (e2) {
+      const blob = await getMedia(card.id, 'image');
+      if (blob) {
+        thumbnailUrl = await blobToDataURL(blob);
+        debugLog.add(`[IMG] created data URL thumbnail for card ${card.id} (${blob.size}B ${blob.type})`);
+      } else {
         thumbnailUrl = null;
-        thumbnailBlobRef = null;
-        debugLog.add(`[IMG] re-fetch also failed for card ${card.id}: ${e2}`);
       }
+    } catch (e) {
+      thumbnailUrl = null;
+      debugLog.add(`[IMG] syncThumbnail failed for card ${card.id}: ${e}`);
     }
   }
 
@@ -73,8 +55,8 @@ export function createCardListItem(container, { card, onEdit, onDelete }) {
       : '';
 
     let badges = '';
-    if (card.imageBlob) badges += `<span class="badge badge--green"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/></svg>写真</span>`;
-    if (card.audioBlob) badges += `<span class="badge badge--purple"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clip-rule="evenodd"/></svg>音声</span>`;
+    if (card.hasImage) badges += `<span class="badge badge--green"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/></svg>写真</span>`;
+    if (card.hasAudio) badges += `<span class="badge badge--purple"><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clip-rule="evenodd"/></svg>音声</span>`;
 
     let metaLeft = '';
     if (card.reviewCount > 0) {
@@ -160,8 +142,6 @@ export function createCardListItem(container, { card, onEdit, onDelete }) {
   return {
     destroy() {
       window.removeEventListener('click', handleOutsideClick);
-      // Data URLs don't need revocation
-      debugLog.add(`[IMG] destroy card ${card.id} (data URL — no revoke needed)`);
       el.remove();
     },
     update(newCard) {

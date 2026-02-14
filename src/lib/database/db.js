@@ -13,7 +13,7 @@ import Dexie from 'dexie';
 export const db = new Dexie('MemoriaDB');
 
 /**
- * Database Schema v1
+ * Database Schema
  *
  * Collections Table:
  * - id: Primary key (UUID)
@@ -27,12 +27,15 @@ export const db = new Dexie('MemoriaDB');
  * - id: Primary key (UUID)
  * - collectionId: Foreign key to collections
  * - text: Card text content
- * - imageBlob: Compressed image data (Blob)
- * - audioBlob: Compressed audio data (Blob)
+ * - hasImage / hasAudio: Boolean flags (media stored in Cache API)
+ * - imageMimeType / audioMimeType: MIME types for cached media
  * - createdAt: Creation timestamp
  * - lastReviewedAt: Last study session timestamp
  * - reviewCount: Number of times reviewed
  * - difficulty: Optional difficulty rating for spaced repetition (0-5)
+ *
+ * Media is stored in CacheStorage under 'memoria-media-v1':
+ *   media/card-{id}-image  /  media/card-{id}-audio
  */
 db.version(1).stores({
   collections: 'id, name, createdAt, updatedAt',
@@ -61,8 +64,10 @@ export class Card {
     this.id = data.id || crypto.randomUUID();
     this.collectionId = data.collectionId || '';
     this.text = data.text || '';
-    this.imageBlob = data.imageBlob || null;
-    this.audioBlob = data.audioBlob || null;
+    this.hasImage = data.hasImage || false;
+    this.hasAudio = data.hasAudio || false;
+    this.imageMimeType = data.imageMimeType || null;
+    this.audioMimeType = data.audioMimeType || null;
     this.createdAt = data.createdAt || Date.now();
     this.lastReviewedAt = data.lastReviewedAt || null;
     this.reviewCount = data.reviewCount || 0;

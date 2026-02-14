@@ -6,6 +6,7 @@
  */
 
 import { db, Collection } from '../database/db.js';
+import { deleteAllCardMedia } from '../utils/mediaCache.js';
 
 /**
  * Simple observable store (replaces Svelte writable)
@@ -122,8 +123,10 @@ function createCollectionsStore() {
         // Delete from database
         await db.collections.delete(id);
 
-        // Also delete all cards in this collection
+        // Delete all cards and their media for this collection
+        const collectionCards = await db.cards.where('collectionId').equals(id).toArray();
         await db.cards.where('collectionId').equals(id).delete();
+        await Promise.all(collectionCards.map(c => deleteAllCardMedia(c.id)));
 
         // Remove from store
         store.update(collections =>

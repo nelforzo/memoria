@@ -1,22 +1,19 @@
 /**
  * StudyMode — fullscreen flashcard study with audio playback.
  *
- * Safari fixes applied here:
- * 1. All image blobs are eagerly converted to data URLs at mount time
- *    (blobToDataURL / FileReader). This avoids Safari's IndexedDB blob
- *    lifetime issue where createObjectURL fails on blobs fetched in a
- *    previous or closed transaction.
- * 2. Audio uses blob URLs (required for <audio> src), created eagerly
- *    before the IndexedDB transaction closes.
- * 3. Navigation is rate-limited to one action per 300 ms to prevent
- *    iOS Safari's phantom touch bug: when el.innerHTML is replaced inside
- *    a touchend handler, Safari can fire synthetic touchend events on the
- *    newly created elements, causing infinite back-and-forth flipping.
+ * Media is loaded from CacheStorage (via mediaCache.js) and converted
+ * eagerly before first render: images → data URLs, audio → blob URLs.
+ *
+ * Navigation is rate-limited to 300 ms to prevent iOS Safari's phantom
+ * touch bug: replacing el.innerHTML inside a touchend handler causes
+ * Safari to fire synthetic touchend events on newly created elements,
+ * producing an infinite navigation loop.
  */
 
 import { cards } from '../../stores/cards.js';
 import { resetViewport } from '../../utils/viewportReset.js';
 import { blobToDataURL } from '../../utils/imageCompression.js';
+import { getMedia } from '../../utils/mediaCache.js';
 import { debugLog } from '../../utils/debugLog.js';
 
 export function createStudyMode(container, { collectionId, collectionName, onExit }) {
@@ -73,29 +70,34 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
     </div>
   `;
 
-  // Eagerly convert all blobs to URLs before first render.
-  // Images → data URLs (immune to Safari blob lifetime issues).
-  // Audio  → blob URLs (required for <audio src>); created now while
-  //          the IndexedDB transaction is still hot.
+  // Eagerly load all media from Cache API and convert to URLs before first render.
+  // Images → data URLs (safe for long-lived display).
+  // Audio  → blob URLs (required for <audio src>).
   async function preloadUrls() {
     for (const card of studyCards) {
       if (destroyed) return;
       let imageUrl = null;
       let audioUrl = null;
 
-      if (card.imageBlob instanceof Blob && card.imageBlob.size > 0) {
+      if (card.hasImage) {
         try {
-          imageUrl = await blobToDataURL(card.imageBlob);
-          debugLog.add(`[IMG] preloaded data URL for card ${card.id} (${card.imageBlob.size}B ${card.imageBlob.type})`);
+          const blob = await getMedia(card.id, 'image');
+          if (blob) {
+            imageUrl = await blobToDataURL(blob);
+            debugLog.add(`[IMG] preloaded data URL for card ${card.id} (${blob.size}B ${blob.type})`);
+          }
         } catch (e) {
           debugLog.add(`[IMG] preload failed for card ${card.id}: ${e}`);
         }
       }
 
-      if (card.audioBlob instanceof Blob && card.audioBlob.size > 0) {
+      if (card.hasAudio) {
         try {
-          audioUrl = URL.createObjectURL(card.audioBlob);
-          debugLog.add(`[AUDIO] created URL for card ${card.id} (${card.audioBlob.size}B ${card.audioBlob.type})`);
+          const blob = await getMedia(card.id, 'audio');
+          if (blob) {
+            audioUrl = URL.createObjectURL(blob);
+            debugLog.add(`[AUDIO] created URL for card ${card.id} (${blob.size}B ${blob.type})`);
+          }
         } catch (e) {
           debugLog.add(`[AUDIO] createObjectURL failed for card ${card.id}: ${e}`);
         }
@@ -294,13 +296,18 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
         e.preventDefault();
         const delta = e.changedTouches[0].clientX - touchStartX;
         const THRESHOLD = 50;
-        if (Math.abs(delta) > THRESHOLD) {
-          if (!canNavigate()) return;
-          if (delta > 0) goToPrevious();
-          else goToNext();
-        } else {
-          toggleFlip();
-        }
+        // Wrap in rAF so DOM mutation happens outside the touch event dispatch.
+        // Without this, Safari fires synthetic touchend events on the newly
+        // created DOM elements, causing a phantom-touch navigation loop.
+        requestAnimationFrame(() => {
+          if (Math.abs(delta) > THRESHOLD) {
+            if (!canNavigate()) return;
+            if (delta > 0) goToPrevious();
+            else goToNext();
+          } else {
+            toggleFlip();
+          }
+        });
       });
     }
   }
