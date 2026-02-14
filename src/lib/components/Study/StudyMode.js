@@ -155,6 +155,7 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
     const sides = card ? getCardSides(card.text) : { front: '', back: null };
     const hasMultipleLines = card && card.text.split('\n').filter(l => l.trim()).length > 1;
     const progress = `${currentIndex + 1} / ${studyCards.length}`;
+    const isLastCard = currentIndex === studyCards.length - 1;
 
     loadAudio(audioUrl);
     markViewed(card);
@@ -231,6 +232,7 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
         <div class="study-hints__touch">
           左右スワイプで移動 · タップでめくる
         </div>
+        ${isLastCard ? `<div class="study-hints__last">最後のカードです — 次へ進むと最初に戻ります</div>` : ''}
       </div>
     `;
 
@@ -311,11 +313,9 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
   }
 
   function goToNext() {
-    if (currentIndex < studyCards.length - 1) {
-      currentIndex++;
-      showFront = true;
-      render();
-    }
+    currentIndex = (currentIndex + 1) % studyCards.length;
+    showFront = true;
+    render();
   }
 
   function handleKeydown(e) {

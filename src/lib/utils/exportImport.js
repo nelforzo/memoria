@@ -105,7 +105,7 @@ export async function exportCollection(collectionId) {
 
     // Create filename
     const timestamp = new Date().toISOString().split('T')[0];
-    const filename = `${collection.name.replace(/[^a-z0-9]/gi, '_')}_${timestamp}.json`;
+    const filename = `${collection.name}_${timestamp}.json`;
 
     // Download file
     downloadJSON(exportData, filename);
