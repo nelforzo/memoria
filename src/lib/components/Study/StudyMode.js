@@ -59,6 +59,8 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
     return { destroy: () => el.remove() };
   }
 
+  document.body.style.overflow = 'hidden';
+
   // Show a brief loading state while we preload URLs
   el.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:center;height:100%;color:white">
@@ -342,6 +344,7 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
         if (audioUrl) { URL.revokeObjectURL(audioUrl); debugLog.add(`[AUDIO] revoked URL for card ${cardId}`); }
       }
       urlCache.clear();
+      document.body.style.overflow = '';
       resetViewport();
       el.remove();
     }
