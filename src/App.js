@@ -143,7 +143,7 @@ export function createApp(target) {
     // Version badge
     const badge = document.createElement('div');
     badge.style.cssText = 'margin-top:var(--sp-8);text-align:center';
-    badge.innerHTML = `<span class="badge badge--version" style="padding:var(--sp-1) var(--sp-3);font-size:var(--text-sm);font-weight:500;border-radius:var(--radius-full)">v1.1.7</span>`;
+    badge.innerHTML = `<span class="badge badge--version" style="padding:var(--sp-1) var(--sp-3);font-size:var(--text-sm);font-weight:500;border-radius:var(--radius-full)">v1.2.0</span>`;
     content.appendChild(badge);
 
     // Bind header buttons
