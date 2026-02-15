@@ -38,6 +38,11 @@ A progressive web app for multimedia flashcard memorization. Create collections 
   - **Replace** — overwrite collections with matching IDs
 - All media (photos and audio) is embedded in the JSON as base64, so a single file is a complete backup
 
+### PWA — Offline & Home Screen
+- Installs as a standalone app on iOS and Android via "Add to Home Screen"
+- Service worker caches the app shell and all static assets
+- Works fully offline after first load — no internet connection required
+
 ### Export format
 ```json
 {
@@ -82,6 +87,7 @@ A progressive web app for multimedia flashcard memorization. Create collections 
 
 ### Browser APIs used
 - **IndexedDB** (via Dexie.js) — stores all collections, cards, and binary media
+- **Cache API / Service Worker** — offline caching of the app shell
 - **Canvas API** — client-side image resizing and WebP conversion
 - **MediaRecorder API** — in-browser audio recording
 - **File API / Blob URLs** — media preview and export/import
@@ -138,7 +144,7 @@ All data is stored in a local IndexedDB database named `MemoriaDB`.
 ```
 memoria/
 ├── src/
-│   ├── main.js                           # Entry point
+│   ├── main.js                           # Entry point, SW registration
 │   ├── App.js                            # Root component, routing
 │   ├── styles.css                        # All CSS (reset, tokens, components)
 │   └── lib/
@@ -171,6 +177,14 @@ memoria/
 │           ├── helpers.js                # UUID, timestamps, formatting
 │           ├── imageCompression.js       # Canvas-based image compression
 │           └── viewportReset.js          # Safari iOS viewport fix
+├── public/
+│   ├── manifest.json                     # PWA web app manifest
+│   ├── sw.js                             # Service worker (offline caching)
+│   └── icons/
+│       ├── icon-192.png                  # App icon 192×192
+│       └── icon-512.png                  # App icon 512×512
+├── docs/
+│   └── deployment.md                     # Deployment procedure
 ├── index.html
 ├── package.json
 └── vite.config.js                        # base: '/memoria/' for GitHub Pages
@@ -209,6 +223,21 @@ npm run preview
 
 ---
 
+## Deployment
+
+Two repos are involved: the source repo (`nelforzo/memoria`) and the GitHub Pages host (`nelforzo/nelforzo.github.io`). The live site is at **https://nelforzo.github.io/memoria/**.
+
+```bash
+npm run build
+# push source changes to nelforzo/memoria
+cp -r dist/* /path/to/nelforzo.github.io/memoria/
+# commit and push nelforzo/nelforzo.github.io
+```
+
+Full step-by-step: [`docs/deployment.md`](docs/deployment.md)
+
+---
+
 ## Browser Compatibility
 
 | Browser | Minimum version |
@@ -217,22 +246,19 @@ npm run preview
 | Firefox | 75+ |
 | Safari | 15.4+ (`dvh` units) |
 
-Requires: IndexedDB, MediaRecorder API, Canvas API, `crypto.randomUUID()`.
+Requires: IndexedDB, MediaRecorder API, Canvas API, `crypto.randomUUID()`, Service Worker.
 
 ---
 
 ## Known Limitations
 
 - No cloud sync — data lives only in the browser's IndexedDB on the current device
-- No PWA service worker yet — requires an internet connection on first load
-- No spaced repetition algorithm — study order is fixed (planned for a future version)
 - Safari iOS 15 and earlier: modals may be partially obscured by the keyboard (no `dvh` support)
 
 ---
 
 ## Roadmap
 
-- [ ] PWA service worker for full offline support and home screen install
 - [ ] Spaced repetition algorithm (SM-2 or similar)
 - [ ] Card search within a collection
 - [ ] Shuffle mode in study
