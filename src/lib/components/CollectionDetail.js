@@ -89,7 +89,7 @@ export function createCollectionDetail(container, { collectionId, onBack }) {
                   <svg class="has-label" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                   <span class="btn__label-desktop">学習</span>
                 </button>
-                <button class="btn btn--ghost" data-action="shuffle" aria-label="シャッフル学習" style="box-shadow:var(--shadow-sm)">
+                <button class="btn btn--purple" data-action="shuffle" aria-label="シャッフル学習" style="box-shadow:var(--shadow-sm)">
                   <svg class="has-label" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
                   <span class="btn__label-desktop">シャッフル</span>
                 </button>

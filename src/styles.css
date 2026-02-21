@@ -290,6 +290,12 @@ textarea { resize: vertical; }
 }
 .btn--green:hover:not(:disabled) { background: var(--green-700); }
 
+.btn--purple {
+  background: var(--purple-600);
+  color: white;
+}
+.btn--purple:hover:not(:disabled) { background: var(--purple-700); }
+
 .btn--danger {
   background: var(--red-600);
   color: white;
