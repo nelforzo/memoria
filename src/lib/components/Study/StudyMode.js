@@ -16,13 +16,22 @@ import { blobToDataURL } from '../../utils/imageCompression.js';
 import { getMedia } from '../../utils/mediaCache.js';
 import { debugLog } from '../../utils/debugLog.js';
 
-export function createStudyMode(container, { collectionId, collectionName, onExit }) {
+export function createStudyMode(container, { collectionId, collectionName, onExit, shuffle = false }) {
   const el = document.createElement('div');
   el.className = 'study-mode';
   container.appendChild(el);
 
   // State
-  let studyCards = [...cards.get()].reverse();
+  const cardsCopy = [...cards.get()];
+  if (shuffle) {
+    for (let i = cardsCopy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [cardsCopy[i], cardsCopy[j]] = [cardsCopy[j], cardsCopy[i]];
+    }
+  } else {
+    cardsCopy.reverse();
+  }
+  let studyCards = cardsCopy;
   let currentIndex = 0;
   let showFront = true;
   let viewedCards = new Set();

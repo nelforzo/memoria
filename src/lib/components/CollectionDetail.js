@@ -86,8 +86,12 @@ export function createCollectionDetail(container, { collectionId, onBack }) {
                   <span class="btn__label-desktop">エクスポート</span>
                 </button>
                 <button class="btn btn--green" data-action="study" aria-label="学習する" style="box-shadow:var(--shadow-sm)">
-                  <svg class="has-label" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                  <svg class="has-label" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                   <span class="btn__label-desktop">学習</span>
+                </button>
+                <button class="btn btn--ghost" data-action="shuffle" aria-label="シャッフル学習" style="box-shadow:var(--shadow-sm)">
+                  <svg class="has-label" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+                  <span class="btn__label-desktop">シャッフル</span>
                 </button>
                 <button class="btn btn--primary" data-action="add-card" aria-label="カードを追加" style="box-shadow:var(--shadow-sm)">
                   <svg class="has-label" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -142,7 +146,8 @@ export function createCollectionDetail(container, { collectionId, onBack }) {
   function bindHeaderEvents() {
     el.querySelector('[data-action="back"]')?.addEventListener('click', onBack);
     el.querySelector('[data-action="export"]')?.addEventListener('click', handleExport);
-    el.querySelector('[data-action="study"]')?.addEventListener('click', openStudyMode);
+    el.querySelector('[data-action="study"]')?.addEventListener('click', () => openStudyMode(false));
+    el.querySelector('[data-action="shuffle"]')?.addEventListener('click', () => openStudyMode(true));
     el.querySelector('[data-action="add-card"]')?.addEventListener('click', openCreateDialog);
   }
 
@@ -196,7 +201,7 @@ export function createCollectionDetail(container, { collectionId, onBack }) {
     });
   }
 
-  function openStudyMode() {
+  function openStudyMode(shuffle = false) {
     const currentCards = cards.get();
     if (currentCards.length === 0) {
       notify.show('学習を開始する前に、まずカードを追加してください！', 'error');
@@ -205,7 +210,8 @@ export function createCollectionDetail(container, { collectionId, onBack }) {
     studyModeInstance = createStudyMode(document.body, {
       collectionId,
       collectionName: collection?.name || '',
-      onExit: closeStudyMode
+      onExit: closeStudyMode,
+      shuffle
     });
   }
 
