@@ -66,7 +66,8 @@ function createCollectionsStore() {
       try {
         const collection = new Collection({
           name: data.name,
-          description: data.description || ''
+          description: data.description || '',
+          voiceURI: data.voiceURI || ''
         });
 
         await db.collections.add(collection);

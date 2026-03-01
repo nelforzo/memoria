@@ -16,7 +16,7 @@ import { blobToDataURL } from '../../utils/imageCompression.js';
 import { getMedia } from '../../utils/mediaCache.js';
 import { debugLog } from '../../utils/debugLog.js';
 
-export function createStudyMode(container, { collectionId, collectionName, onExit, shuffle = false }) {
+export function createStudyMode(container, { collectionId, collectionName, collectionVoiceURI = '', onExit, shuffle = false }) {
   const el = document.createElement('div');
   el.className = 'study-mode';
   container.appendChild(el);
@@ -135,11 +135,38 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
   }
 
   function playAudio() {
-    const { audioUrl } = getUrls(currentCard());
-    if (!audioUrl) { debugLog.add('[AUDIO] playAudio: no URL'); return; }
-    debugLog.add(`[AUDIO] playAudio called readyState=${audio.readyState}`);
-    audio.currentTime = 0;
-    audio.play().catch(e => { debugLog.add(`[AUDIO] play() rejected: ${e}`); });
+    const card = currentCard();
+    const { audioUrl } = getUrls(card);
+
+    if (audioUrl) {
+      // Card has a recorded audio file — play it (existing behaviour)
+      debugLog.add(`[AUDIO] playAudio called readyState=${audio.readyState}`);
+      audio.currentTime = 0;
+      audio.play().catch(e => { debugLog.add(`[AUDIO] play() rejected: ${e}`); });
+      return;
+    }
+
+    // No audio file — fall back to TTS if the card has text content
+    if (!window.speechSynthesis) { debugLog.add('[TTS] speechSynthesis not supported'); return; }
+    window.speechSynthesis.cancel();
+
+    const firstLine = card?.text?.split('\n').find(l => l.trim()) ?? '';
+    if (!firstLine) { debugLog.add('[TTS] playAudio: no text for TTS'); return; }
+
+    debugLog.add(`[TTS] speaking: "${firstLine.slice(0, 60)}"`);
+    const utterance = new SpeechSynthesisUtterance(firstLine);
+
+    if (collectionVoiceURI) {
+      const voice = window.speechSynthesis.getVoices().find(v => v.voiceURI === collectionVoiceURI);
+      if (voice) {
+        utterance.voice = voice;
+        debugLog.add(`[TTS] using voice: ${voice.name}`);
+      } else {
+        debugLog.add(`[TTS] voiceURI "${collectionVoiceURI}" not found — using default`);
+      }
+    }
+
+    window.speechSynthesis.speak(utterance);
   }
 
   function markViewed(card) {
@@ -348,6 +375,8 @@ export function createStudyMode(container, { collectionId, collectionName, onExi
       window.removeEventListener('keydown', handleKeydown);
       audio.pause();
       audio.removeAttribute('src');
+      // Stop any ongoing TTS
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
       // Revoke blob URLs (audio only — image data URLs need no revocation)
       for (const [cardId, { audioUrl }] of urlCache.entries()) {
         if (audioUrl) { URL.revokeObjectURL(audioUrl); debugLog.add(`[AUDIO] revoked URL for card ${cardId}`); }

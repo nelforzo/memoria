@@ -210,6 +210,7 @@ export function createCollectionDetail(container, { collectionId, onBack }) {
     studyModeInstance = createStudyMode(document.body, {
       collectionId,
       collectionName: collection?.name || '',
+      collectionVoiceURI: collection?.voiceURI || '',
       onExit: closeStudyMode,
       shuffle
     });

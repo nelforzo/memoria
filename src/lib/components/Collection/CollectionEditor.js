@@ -9,8 +9,14 @@ export function createCollectionEditor(parent) {
   let _collection = null;
   let _onCreate = null;
   let _onUpdate = null;
+  // AbortController used to cancel voiceschanged listener when editor closes or
+  // re-opens for a different collection, preventing stale-closure bugs.
+  let _voicesAbort = null;
 
   function open({ collection = null, onCreate, onUpdate }) {
+    // Abort any pending voice listener from a previous open() call
+    if (_voicesAbort) { _voicesAbort.abort(); _voicesAbort = null; }
+
     _collection = collection;
     _onCreate = onCreate || null;
     _onUpdate = onUpdate || null;
@@ -20,6 +26,7 @@ export function createCollectionEditor(parent) {
     const submitLabel = isEdit ? '変更を保存' : 'コレクションを作成';
     const name = collection?.name || '';
     const desc = collection?.description || '';
+    const currentVoiceURI = collection?.voiceURI || '';
 
     el.innerHTML = `
       <div class="modal-backdrop" data-backdrop>
@@ -47,6 +54,13 @@ export function createCollectionEditor(parent) {
                 <p class="form-counter" data-desc-count>${desc.length}/500</p>
               </div>
             </div>
+            <div class="form-field">
+              <label class="form-label" for="ce-voice">TTS音声 <span class="form-label__optional">（任意）</span></label>
+              <select id="ce-voice" data-input="voice">
+                <option value="">デフォルト</option>
+              </select>
+              <p class="form-hint" style="margin-top:var(--sp-1)">カードのテキストを読み上げる音声を選択します</p>
+            </div>
             <div class="flex gap-3">
               <button type="button" class="flex-1 btn btn--outline" data-action="close">キャンセル</button>
               <button type="submit" class="flex-1 btn btn--primary">${submitLabel}</button>
@@ -59,6 +73,36 @@ export function createCollectionEditor(parent) {
     const form = el.querySelector('[data-form]');
     const nameInput = el.querySelector('[data-input="name"]');
     const descInput = el.querySelector('[data-input="desc"]');
+    const voiceSelect = el.querySelector('[data-input="voice"]');
+
+    // Populate voice dropdown — may be async if voices haven't loaded yet
+    function populateVoices() {
+      const voices = window.speechSynthesis?.getVoices() ?? [];
+      // Keep only newly added options; remove all except the default placeholder
+      while (voiceSelect.options.length > 1) voiceSelect.remove(1);
+      for (const v of voices) {
+        const opt = document.createElement('option');
+        opt.value = v.voiceURI;
+        opt.textContent = `${v.name} (${v.lang})`;
+        if (v.voiceURI === currentVoiceURI) opt.selected = true;
+        voiceSelect.appendChild(opt);
+      }
+      // If no voice matched the saved URI, keep default selected
+      if (!currentVoiceURI || !voices.find(v => v.voiceURI === currentVoiceURI)) {
+        voiceSelect.value = '';
+      }
+    }
+
+    // Voices may already be available synchronously (Chrome desktop) or arrive
+    // via voiceschanged (Safari, Firefox). Use AbortController so we don't leak
+    // a listener when the editor is closed or re-opened.
+    _voicesAbort = new AbortController();
+    populateVoices();
+    if (window.speechSynthesis) {
+      window.speechSynthesis.addEventListener('voiceschanged', populateVoices, {
+        signal: _voicesAbort.signal
+      });
+    }
 
     // Character counters
     nameInput.addEventListener('input', () => {
@@ -73,6 +117,7 @@ export function createCollectionEditor(parent) {
       e.preventDefault();
       const nameVal = nameInput.value.trim();
       const descVal = descInput.value.trim();
+      const voiceVal = voiceSelect.value;
 
       // Validate
       if (!nameVal) {
@@ -84,7 +129,7 @@ export function createCollectionEditor(parent) {
         return;
       }
 
-      const data = { name: nameVal, description: descVal };
+      const data = { name: nameVal, description: descVal, voiceURI: voiceVal };
 
       if (isEdit) {
         if (_onUpdate) _onUpdate({ id: _collection.id, ...data });
@@ -110,6 +155,7 @@ export function createCollectionEditor(parent) {
   }
 
   function close() {
+    if (_voicesAbort) { _voicesAbort.abort(); _voicesAbort = null; }
     el.innerHTML = '';
     _collection = null;
     _onCreate = null;

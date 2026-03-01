@@ -42,6 +42,12 @@ db.version(1).stores({
   cards: 'id, collectionId, createdAt, lastReviewedAt'
 });
 
+// Version 2: adds voiceURI field to collections (TTS voice selection per collection)
+db.version(2).stores({
+  collections: 'id, name, createdAt, updatedAt',
+  cards: 'id, collectionId, createdAt, lastReviewedAt'
+});
+
 /**
  * Collection Model
  */
@@ -50,6 +56,7 @@ export class Collection {
     this.id = data.id || crypto.randomUUID();
     this.name = data.name || '';
     this.description = data.description || '';
+    this.voiceURI = data.voiceURI || '';
     this.createdAt = data.createdAt || Date.now();
     this.updatedAt = data.updatedAt || Date.now();
     this.cardCount = data.cardCount || 0;
