@@ -135,7 +135,7 @@ export function createAudioRecorderUI(container, { audioBlob = null, disabled = 
       render();
     } catch (err) {
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        error = 'マイクへのアクセスが拒否されました。マイクへのアクセスを許可して、もう一度お試しください。';
+        error = 'マイクへのアクセスが拒否されました。ブラウザの設定でマイクを許可してから、もう一度お試しください。';
       } else if (err.name === 'NotFoundError') {
         error = 'マイクが見つかりません。マイクを接続して、もう一度お試しください。';
       } else {

@@ -204,7 +204,7 @@ export function createCollectionDetail(container, { collectionId, onBack }) {
   function openStudyMode(shuffle = false) {
     const currentCards = cards.get();
     if (currentCards.length === 0) {
-      notify.show('学習を開始する前に、まずカードを追加してください！', 'error');
+      notify.show('学習を始めるには、先にカードを追加してください。', 'error');
       return;
     }
     studyModeInstance = createStudyMode(document.body, {

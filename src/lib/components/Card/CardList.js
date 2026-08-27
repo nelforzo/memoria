@@ -28,7 +28,7 @@ export function createCardList(container, { cards, onEdit, onDelete, onCreate })
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--gray-400)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
           </div>
           <h3 class="empty-state__title">カードがありません</h3>
-          <p class="empty-state__desc">最初のフラッシュカードを追加して、コレクションを作りましょう。</p>
+          <p class="empty-state__desc">最初のカードを追加して、学習を始めましょう。</p>
           ${onCreate ? `
             <button class="btn btn--primary" data-action="create" style="padding:var(--sp-3) var(--sp-6);box-shadow:var(--shadow-sm)">
               <svg class="has-label" style="margin-right:var(--sp-2)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>

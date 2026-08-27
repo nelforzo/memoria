@@ -209,7 +209,7 @@ export function createApp(target) {
     deletingCollection = collection;
     dialog.open({
       title: 'コレクションを削除',
-      message: `「${collection.name}」を削除しますか？このコレクションにある ${collection.cardCount || 0} 枚のカードも全て削除されます。この操作は元に戻せません。`,
+      message: `「${collection.name}」を削除しますか？コレクション内の ${collection.cardCount || 0} 枚のカードもすべて削除され、元に戻すことはできません。`,
       confirmLabel: '削除',
       cancelLabel: 'キャンセル',
       isDanger: true,

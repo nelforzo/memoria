@@ -51,7 +51,7 @@ export function createSettings(container, { onBack }) {
     content.insertAdjacentHTML('beforeend', `
       <div class="settings-section">
         <h2 class="settings-section__title">データのエクスポート</h2>
-        <p class="settings-section__desc">全てのコレクション、カード、メディアをJSONファイルとしてダウンロードします。バックアップや他のデバイスへのデータ転送に使用できます。</p>
+        <p class="settings-section__desc">すべてのコレクション、カード、メディアを JSON ファイルとしてダウンロードします。バックアップや、別のデバイスへの移行にご利用いただけます。</p>
         <button class="btn btn--primary btn--disabled-gray" data-action="export" ${isExporting || collectionList.length === 0 ? 'disabled' : ''} style="padding:var(--sp-3) var(--sp-6)">
           ${isExporting
             ? `<svg class="spinner" style="margin-right:var(--sp-2)" fill="none" viewBox="0 0 24 24"><circle style="opacity:0.25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path style="opacity:0.75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>エクスポート中...`
@@ -65,7 +65,7 @@ export function createSettings(container, { onBack }) {
     content.insertAdjacentHTML('beforeend', `
       <div class="settings-section">
         <h2 class="settings-section__title">データのインポート</h2>
-        <p class="settings-section__desc">以前にエクスポートしたJSONファイルからコレクションをインポートします。既存のコレクションの処理方法を選択してください。</p>
+        <p class="settings-section__desc">以前エクスポートした JSON ファイルからコレクションをインポートします。既存のコレクションの扱い方を選択してください。</p>
         <div style="margin-bottom:var(--sp-4)">
           <label class="form-label">インポート方法</label>
           <div class="radio-group">
@@ -85,7 +85,7 @@ export function createSettings(container, { onBack }) {
             : `<svg style="margin-right:var(--sp-2)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>ファイルからインポート`}
         </button>
         <div class="warning-panel">
-          <p><strong>警告：</strong>「上書き」を選択すると、同じIDの既存コレクションが上書きされます。事前に現在のデータをエクスポートしてください！</p>
+          <p><strong>警告：</strong>「上書き」を選ぶと、同じ ID の既存コレクションが置き換えられます。実行する前に、必ずデータをエクスポートしてください。</p>
         </div>
       </div>
     `);

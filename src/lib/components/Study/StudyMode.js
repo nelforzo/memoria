@@ -268,7 +268,7 @@ export function createStudyMode(container, { collectionId, collectionName, colle
         <div class="study-hints__touch">
           左右スワイプで移動 · タップでめくる
         </div>
-        ${isLastCard ? `<div class="study-hints__last">最後のカードです — 次へ進むと最初に戻ります</div>` : ''}
+        ${isLastCard ? `<div class="study-hints__last">これは最後のカードです。次へ進むと最初のカードに戻ります。</div>` : ''}
       </div>
     `;
 
